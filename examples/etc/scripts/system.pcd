@@ -1,0 +1,60 @@
+#################################################################
+# system.pcd: Example PCD script for system services startup
+#
+#################################################################
+RULE = SYSTEM_WATCHDOG
+START_COND = NONE
+COMMAND = /usr/sbin/watchdog -t 10 /dev/watchdog -n
+SCHED = FIFO,99
+DAEMON = YES
+END_COND = NONE
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = RESTART
+ACTIVE = YES
+
+#################################################################
+RULE = SYSTEM_LOGGER
+START_COND = NONE
+COMMAND = /usr/sbin/logger --no-fork
+SCHED = NICE,19
+DAEMON = YES
+END_COND = PROCESS_READY
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = RESTART
+ACTIVE = YES
+
+#################################################################
+RULE = SYSTEM_TIMER
+START_COND = RULE_COMPLETED,SYSTEM_LOGGER
+COMMAND = /usr/sbin/timer --timer-tick=100
+SCHED = FIFO,1
+DAEMON = YES
+END_COND = PROCESS_READY
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = RESTART
+ACTIVE = YES
+
+#################################################################
+RULE = SYSTEM_INIT
+START_COND = NONE
+COMMAND = /usr/sbin/sys_init
+SCHED = NICE,3
+DAEMON = NO
+END_COND = PROCESS_READY
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = RESTART
+ACTIVE = YES
+
+#################################################################
+RULE = SYSTEM_LASTRULE
+START_COND = RULE_COMPLETED,SYSTEM_TIMER,SYSTEM_INIT,SYSTEM_LOGGER
+COMMAND = NONE
+SCHED = NICE,0
+DAEMON = NO
+END_COND = NONE
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = NONE
+ACTIVE = YES
+
+#################################################################
+

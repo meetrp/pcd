@@ -1,0 +1,174 @@
+PCD - Process Control Daemon application and library v0.0.1 - March 2010
+
+-------------------------------------------------------------------------------
+
+PCD APPLICATION
+
+The Process Control Daemon is a system level process manager, meant mostly 
+for RT embedded systems running Linux. The PCD is used for booting the system
+in a synchronized manner, control and monitor processes and recover from 
+crashes. 
+
+The PCD application is designed to run on an embedded target platform.
+It was developed and tested on an ARM11 platform. However, the code is 
+portable and was compiled and tested on in x86 environment as well.
+
+In order to activate the PCD, it must be given with a startup script, which
+contains all the required rules. See exaples and the design document for
+more details.
+
+Compilation:
+Either use the build-all.sh script, or implement your own Makefile wrapper
+around the PCD's Makefile set. The PCD requires the pcdapi and ipc libraries.
+Please review the build script which defines the cross compiler, include and
+installation directories required to finalize this process.
+
+Example:
+        # Cross compiler
+        export CC=armeb-linux-uclibceabi-gcc
+
+        # Include directory prefix
+        export INCLUDE_DIR_PREFIX=/projects/rt-embedded/include
+
+        # Installation directory prefix
+        export INSTALL_DIR_PREFIX=/projects/rt-embedded/filesystem
+
+Command line parameters (on the target):
+
+-f FILE, --file=FILE 	: Specify PCD rules file.
+-p, --print		: Print parsed configuration.
+-v, --verbose		: Verbose display.
+-t tick, --timer-tick=t : Setup timer ticks in ms (default 200ms).
+-e FILE, --errlog=FILE	: Specify error log file (in nvram)
+-d, --debug             : Debug mode
+-h, --help 		: Print usage screen
+
+The PCD application needs to run as soon as the system is up. Usually, you
+should start it from init.d/rcS file, in the background.
+
+PCD scripts:
+
+The following contains the syntax of a rule in the script. Each rule tells
+the PCD which process to start, and when. It also specifies what are the
+conditions to start it, what are the conditions for successfull run, and
+what to do in case of an error.
+
+# Include a rule file (optional)
+INCLUDE = filename.pcd
+
+################### Start of a rule block #############################
+
+# Index of the rule
+RULE = GROUPNAME_RULENAME
+
+# Condition to start rule, existence of one of the following
+# 
+# NONE 			- No start condition, application is spawn immediately
+# FILE filename 	- The existence of a file
+# RULE_COMPLETED id 	- Rule id completed successfully
+# NETDEVICE	netdev 	- The existence of a networking device
+# IPC_OWNER owner 	- The existence of an IPC destination point
+# ENV_VAR name, value	- Value of a variable
+#
+START_COND = { NONE; FILE filename; PNAME pname; RULE_COMPLETED id; NETDEVICE netdev; 
+               IPC_OWNER owner, STATUS script, status }
+
+# Command with parameters, NONE for sync point
+COMMAND = cmd parameters...
+
+# Scheduling (priority) of the process
+SCHED = { NICE value; FIFO value }
+
+# Daemon flag - Process must not end
+DAEMON = { YES, NO }
+
+# Condition to end rule and move to next rule, wait for one of the following:
+# 
+# NONE 		    - No monitor on the result, just spawn application and continue.
+# FILE filename     - The existence of a file
+# EXIT status 	    - The application exited with status. Other statuses are considered failure
+# NETDEVICE netdev  - The existence of a networking device
+# IPC_OWNER owner   - The existence of an IPC destination point
+# PROCESS_READY     - The process sent a READY event though PCD API.
+# WAIT msecs 	    - Delay, ignore END_COND_TIMEOUT
+#
+END_COND = { NONE; FILE filename; EXIT status; NETDEVICE netdev; IPC_OWNER owner; 
+             WAIT msecs; PROCESS_READY }
+
+# Timeout for end condition. Fail if timeout expires. -1 if not relevant.
+END_COND_TIMEOUT = msecs
+
+# Action upon failure, do one of the following actions upon failure
+# NONE - Do not take any action
+# REBOOT - Reboot the system
+# RESTART - Restart the rule
+# EXEC_RULE id - Execute a rule
+# 
+FAILURE_ACTION = { NONE, REBOOT, RESTART, EXEC_RULE id }
+
+# Rule is Active or not (To be activated later by PCD API)
+ACTIVE = { YES, NO }
+################### End of a rule block #############################
+
+-------------------------------------------------------------------------------
+
+PCD LIBRARY
+
+The PCD library provides means to communicate with the PCD application,
+as well as some other services, such as signal handlers (for catching 
+crashes), singleton check for daemons, etc. See pcdapi header file and
+documentation for more details.
+
+Other applications can link with this library and request the PCD to start
+or stop other applications, according to the logic of the target.
+
+-------------------------------------------------------------------------------
+
+PCD PARSER APPLICATION
+
+The PCD parser is designed to run on the Host machine and not on the target.
+The PCD parser provides the following services:
+- A means to "compile" a PCD script on the host. Check and report syntax errors.
+- Generate a header file, so all applications could include it. The header file
+  contains all the component rule definitions which are required when calling
+  the pcd API.
+- Generate a dependency graph. The output of this function is a textual file in
+  dot syntax, which can be displayed graphically. The graph displays the dependency
+  graph of the system and the flow of the startup. It can help designers to
+  design, understand and fix the way and order the system starts.
+  The script is converted to graphical layout using the Graphviz tool 
+  (Available for Windows/Linux): http://graphviz.org/Download.php
+
+Command line parameters (on the host):
+
+-f FILE, --file=FILE            Specify PCD rules file.
+-g FILE, --graph=FILE           Generate a graph file.
+-d [0|1|2], --display=[0|1|2]   Items to display in graph file 
+  						           (Active|All|Inactive).
+-o FILE, --output=FILE          Generate an output header file with rules    
+                                                                  definitions.
+-b DIR, --base-dir=DIR          Specify base directory on the host.
+-v, --verbose                   Print parsed configuration.
+-h, --help                      Print this message and exit. 
+
+-------------------------------------------------------------------------------
+
+DOCUMENTATION
+
+Documentation is available in the PCD's homepage in SourceForge.
+
+-------------------------------------------------------------------------------
+
+AUTHOR
+
+This library and application was designed and written by Hai Shalom.
+If you have any questions, comments or remarks, please contact me:
+hai@rt-embedded.com
+
+
+The PCD Homepage:
+http://www.rt-embedded.com/pcd/
+
+The code is managed and maintained in SourceForge, under the PCD project:
+http://pcd.sourceforge.net/
+

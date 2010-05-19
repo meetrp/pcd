@@ -1,0 +1,51 @@
+IPC Library v0.0.1 - March 2010
+
+The IPC library utilizes the UNIX sockets to create client destination points,
+where the actual implementation and socket path is encapsulated.
+The destination points database is managed using a shared memory segment,
+which lists the clients details. A well known process can own a destination
+point using a predefined index number. Clients who wish to communicate with it
+can use the predefined number without knowing the actual path of the socket.
+
+The IPC message format guarantees a certain level of message integrity by adding
+magic and size fields.
+
+The flow of usage is as follows:
+
+To start the IPC:
+1. IPC_init     -> Initialize the library.
+2. IPC_start    -> Start a destination point. The IPC can now be used.
+3. IPC_set_owner    -> (Optional) Own a destination point.
+
+To wait for a message (Server):
+1. IPC_wait_msg -> Wait for incoming message.
+2. IPC_get_msg_context -> (Optional) Get the message's destination point.
+3. IPC_get_msg      -> Get a pointer for the data segment in the message.
+4. IPC_reply_msg    -> Reply using the incoming message which needs to be freed later.
+5. IPC_free_msg     -> Free the incoming message
+
+To send a message (Client):
+1. IPC_alloc_msg    -> Allocate memory for a message.
+2. IPC_get_msg      -> Get a pointer for the data segment in the message.
+3. IPC_get_context_by_owner -> Get the destination point of a certain owner.
+4. IPC_send_msg     -> Send a message. The recipient must free the message when done.
+
+To stop the IPC on a specific destination point:
+1. IPC_stop         -> Stop the IPC. Free the resources.
+
+General functions:
+1. IPC_cleanup_proc -> A general function to cleanup resources of a context. Can be used by a process monitor.
+2. IPC_general_func -> A general purpose function. Not used currently.
+
+
+AUTHOR
+
+This library was designed and written by Hai Shalom.
+If you have any questions, comments or remarks, please contact me:
+hai@rt-embedded.com
+
+
+The code is managed and maintained in SourceForge, under the PCD project:
+
+http://pcd.sourceforge.net/
+

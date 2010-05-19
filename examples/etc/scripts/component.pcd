@@ -1,0 +1,104 @@
+############################################################################
+# component.pcd: Top level PCD script for a product
+#
+############################################################################
+RULE = COMPONENT_APPRUN
+START_COND = RULE_COMPLETED,SYSTEM_LASTRULE
+COMMAND = echo "1" > /var/tmp/app_run
+SCHED = NICE,0
+DAEMON = NO
+END_COND = NONE
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = NONE
+ACTIVE = YES
+
+#################################################################
+RULE = COMPONENT_GBETH
+START_COND = RULE_COMPLETED,COMPONENT_APPRUN
+COMMAND = insmod /lib/modules/2.6.33/drivers/net/gb-eth.ko
+SCHED = NICE,0
+DAEMON = NO
+END_COND = NETDEVICE,eth0
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = REBOOT
+ACTIVE = YES
+
+#################################################################
+RULE = COMPONENT_INITONCE
+START_COND = RULE_COMPLETED,COMPONENT_APPRUN
+COMMAND = /usr/sbin/init_once $init_once_params
+SCHED = NICE,0
+DAEMON = NO
+END_COND = EXIT,0
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = NONE
+ACTIVE = YES
+
+#################################################################
+RULE = COMPONENT_LED
+START_COND = RULE_COMPLETED,COMPONENT_INITONCE
+COMMAND = /usr/sbin/ledd -c -i 500
+SCHED = NICE,0
+DAEMON = YES
+END_COND = NONE
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = RESTART
+ACTIVE = YES
+
+#################################################################
+RULE = COMPONENT_CMDMBOX
+START_COND = RULE_COMPLETED,COMPONENT_LED
+COMMAND = /usr/sbin/hal_cmd_mbox
+SCHED = NICE,0
+DAEMON = YES
+END_COND = PROCESS_READY
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = REBOOT
+ACTIVE = YES
+
+#################################################################
+RULE = COMPONENT_COMPREADY
+START_COND = RULE_COMPLETED,COMPONENT_LED,COMPONENT_INITONCE,COMPONENT_GBETH
+COMMAND = NONE
+SCHED = NICE,0
+DAEMON = NO
+END_COND = NONE
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = NONE
+ACTIVE = YES
+
+#################################################################
+RULE = COMPONENT_INSTMNGR$
+START_COND = NONE
+COMMAND = /usr/sbin/instance_manager
+SCHED = NICE,0
+DAEMON = YES
+END_COND = PROCESS_READY
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = REBOOT
+ACTIVE = NO
+
+#################################################################
+RULE = COMPONENT_SWDL
+START_COND = NONE
+COMMAND = /usr/sbin/swdl
+SCHED = NICE,0
+DAEMON = NO
+END_COND = EXIT,0
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = NONE
+ACTIVE = NO
+
+#################################################################
+RULE = COMPONENT_LASTRULE
+START_COND = RULE_COMPLETED,COMPONENT_COMPREADY
+COMMAND = NONE
+SCHED = NICE,0
+DAEMON = NO
+END_COND = NONE
+END_COND_TIMEOUT = -1
+FAILURE_ACTION = NONE
+ACTIVE = YES
+
+#################################################################
+

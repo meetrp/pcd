@@ -1,0 +1,9 @@
+############################################################################
+# product.pcd: Top level PCD script for a product
+#
+############################################################################
+
+INCLUDE = /etc/scripts/system.pcd
+INCLUDE = /etc/scripts/component.pcd
+
+
