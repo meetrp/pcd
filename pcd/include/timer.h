@@ -52,7 +52,7 @@
 /*! \def PCD_TIMER_TICK_DEFAULT
  *  \brief Default timer tick value, 200ms
  */
-#define PCD_TIMER_TICK_DEFAULT       200000
+#define PCD_TIMER_TICK_DEFAULT       200
 
 extern Uint32 PCD_TIMER_TICK;       /* PCD Timer tick in ms */
 
