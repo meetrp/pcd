@@ -45,7 +45,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <linux/config.h>
 #include "rules_db.h"
 #include "system_types.h"
 #include "ipc.h"

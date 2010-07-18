@@ -46,7 +46,6 @@
 #include <semaphore.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <linux/config.h>
 #include "rules_db.h"
 #include "process.h"
 #include "timer.h"
