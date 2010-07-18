@@ -26,6 +26,11 @@ ifdef INCLUDE_DIR_PREFIX
 CFLAGS += -I$(INCLUDE_DIR_PREFIX)
 endif
 
+# Enable support for ARM?
+ifdef CONFIG_ARM
+CFLAGS += -DCONFIG_ARM
+endif
+
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
 TARGET = libpcd
 

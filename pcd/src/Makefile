@@ -26,6 +26,11 @@ ifdef INCLUDE_DIR_PREFIX
 CFLAGS += -I$(INCLUDE_DIR_PREFIX)
 endif
 
+# Enable support for ARM?
+ifdef CONFIG_ARM
+CFLAGS += -DCONFIG_ARM
+endif
+
 LDFLAGS += -L../../ipc/src -lipc -L./pcdapi/src -lpcd -lrt
 
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
