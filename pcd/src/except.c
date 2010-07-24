@@ -405,7 +405,7 @@ void PCD_exception_listen( void )
         } while ( ret && (remainingBytes > 0) );
 
         /* Go process the crash */
-        if ( ret == 0 )
+        if (ret > 0)
             PCD_dump_fault_info( &exception );
     }
 }
