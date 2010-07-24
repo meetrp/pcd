@@ -53,7 +53,6 @@
 #include "except.h"
 #include "errlog.h"
 
-
 #define PCD_ERRLOG_BUF_SIZE             1024
 
 static Int32 fd = -1;
@@ -259,6 +258,55 @@ static void PCD_dump_fault_info( exception_t *exception )
         return;
 #endif
 
+#ifdef CONFIG_X86 /* Print X86 registers */
+    i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nX86 registers:\n\n"
+                  "cr2=0x%08lx\n"
+                  "oldmask=0x%08lx\n"
+                  "GS=0x%08x\n"
+                  "FS=0x%08x\n"
+                  "ES=0x%08x\n"
+                  "DS=0x%08x\n"
+                  "EDI=0x%08x\n"
+                  "ESI=0x%08x\n"
+                  "EBP=0x%08x\n"
+                  "ESP=0x%08x\n"
+                  "EBX=0x%08x\n"
+                  "EDX=0x%08x\n"
+                  "ECX=0x%08x\n"
+                  "EAX=0x%08x\n"
+                  "TRAPNO=0x%08x\n"
+                  "ERR=0x%08x\n"
+                  "EIP=0x%08x\n"
+                  "CS=0x%08x\n"
+                  "EFL=0x%08x\n"
+                  "UESP=0x%08x\n"
+                  "SS=0x%08x\n",
+                  exception->uc_mctx.cr2,
+                  exception->uc_mctx.oldmask,
+                  exception->uc_mctx.gregs[REG_GS],
+                  exception->uc_mctx.gregs[REG_FS],
+                  exception->uc_mctx.gregs[REG_ES],
+                  exception->uc_mctx.gregs[REG_DS],
+                  exception->uc_mctx.gregs[REG_EDI],
+                  exception->uc_mctx.gregs[REG_ESI],
+                  exception->uc_mctx.gregs[REG_EBP],
+                  exception->uc_mctx.gregs[REG_ESP],
+                  exception->uc_mctx.gregs[REG_EBX],
+                  exception->uc_mctx.gregs[REG_EDX],
+                  exception->uc_mctx.gregs[REG_ECX],
+                  exception->uc_mctx.gregs[REG_EAX],
+                  exception->uc_mctx.gregs[REG_TRAPNO],
+                  exception->uc_mctx.gregs[REG_ERR],
+                  exception->uc_mctx.gregs[REG_EIP],
+                  exception->uc_mctx.gregs[REG_CS],
+                  exception->uc_mctx.gregs[REG_EFL],
+                  exception->uc_mctx.gregs[REG_UESP],
+                  exception->uc_mctx.gregs[REG_SS]);
+
+    if ( i<0 )
+        return;
+#endif
+
     write( STDERR_FILENO, buffer, i );
     PCD_errlog_log( buffer, False );
 
@@ -357,7 +405,7 @@ void PCD_exception_listen( void )
         } while ( ret && (remainingBytes > 0) );
 
         /* Go process the crash */
-        if ( ret > 0 )
+        if ( ret == 0 )
             PCD_dump_fault_info( &exception );
     }
 }

@@ -497,7 +497,9 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
     Int32 fd1, fd2;
     Int32 total = sizeof( exception_t );
     Int32 i;
-#ifdef CONFIG_ARM /* ARM registers */
+
+/* ARM registers */ /* X86 processor context */
+#if defined(CONFIG_ARM) || defined(CONFIG_X86)
     ucontext_t *ctx = (ucontext_t *)context;
 #endif
 
@@ -516,6 +518,10 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
     clock_gettime(CLOCK_REALTIME, &exception.time);
 #ifdef CONFIG_ARM /* ARM registers */
     exception.regs = ctx->uc_mcontext;
+#endif
+
+#ifdef CONFIG_X86 /* X86 processor context */
+    exception.uc_mctx = ctx->uc_mcontext; 
 #endif
 
     fd1 = open( mapsFile, O_RDONLY );

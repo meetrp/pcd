@@ -127,7 +127,9 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
         exception_t exception;
         Int32 fd;
         Int32 i;
-#ifdef CONFIG_ARM /* ARM registers */
+
+/* ARM registers */ /* X86 processor context */
+#if defined(CONFIG_ARM) || defined(CONFIG_X86)
         ucontext_t *ctx = (ucontext_t *)context;
 #endif
         Char *procName = "pcd";
@@ -158,6 +160,9 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
         exception.regs = ctx->uc_mcontext;
 #endif
 
+#ifdef CONFIG_X86 /* X86 processor context */
+        exception.uc_mctx = ctx->uc_mcontext; 
+#endif
         /* Open the self exception file */
         fd = open( PCD_PROCESS_SELF_EXCEPTION_DIRECTORY "/" PCD_PROCESS_SELF_EXCEPTION_FILE, O_CREAT | O_WRONLY | O_SYNC );
 

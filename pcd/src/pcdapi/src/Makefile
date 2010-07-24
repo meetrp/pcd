@@ -31,6 +31,11 @@ ifdef CONFIG_ARM
 CFLAGS += -DCONFIG_ARM
 endif
 
+# Enable support for x86
+ifdef CONFIG_X86
+CFLAGS += -DCONFIG_X86
+endif
+
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
 TARGET = libpcd
 

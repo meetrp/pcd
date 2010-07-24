@@ -42,6 +42,10 @@
 #ifdef CONFIG_ARM /* ARM registers */
 #include <asm/sigcontext.h>
 #endif
+#ifdef CONFIG_X86 /* X86 processor context */
+#define __USE_GNU
+#include <sys/ucontext.h>
+#endif
 #include "process.h"
 
 
@@ -81,6 +85,10 @@ typedef struct exception_t
 
 #ifdef CONFIG_ARM /* ARM registers */
     struct sigcontext regs;
+#endif
+
+#ifdef CONFIG_X86 /* x86 processor context */
+    mcontext_t uc_mctx;
 #endif
 
 } exception_t;

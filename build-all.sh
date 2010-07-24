@@ -20,6 +20,9 @@ export PCD_VERSION=1.0.3
 # show a minimal crash log.
 # export CONFIG_ARM=y
 
+# Enable x86 platform specific support
+# export CONFIG_X86=y
+
 echo "================================"
 echo PCD version: $PCD_VERSION
 echo IPC version: $IPC_VERSION
