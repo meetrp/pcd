@@ -17,6 +17,7 @@
 #  Makefile for ipc library
 
 CC ?= gcc
+AR = ar rcs
 CFLAGS = -MMD -O2 -Wall -fomit-frame-pointer -fPIC -g
 LDFLAGS = -shared
 
@@ -35,15 +36,17 @@ all: $(TARGET) install
 $(TARGET): $(obj-y)
 	@echo "  LINK	 	$@"
 	@$(CC) $(CFLAGS) $(obj-y) -o $@.so $(LDFLAGS) -Wl,-Map,$@.map
+	@$(AR) $@.a $(obj-y)
 
 install: $(TARGET)
 ifdef INSTALL_DIR_PREFIX
 	@mkdir -p $(INSTALL_DIR_PREFIX)/lib
 	@install $?.so $(INSTALL_DIR_PREFIX)/lib
+	@install $?.a $(INSTALL_DIR_PREFIX)/lib
 endif
 
 clean:
-	@rm -f $(TARGET).so $(obj-y) $(obj-y:.o=.d) $(TARGET).map
+	@rm -f $(TARGET).so $(TARGET).a $(obj-y) $(obj-y:.o=.d) $(TARGET).map
 
 
 %.o: %.c
