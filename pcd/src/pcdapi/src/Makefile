@@ -17,7 +17,7 @@
 #  Makefile for pcd library
 
 CC ?= gcc
-AR = ar rcs
+AR ?= ar
 CFLAGS = -MMD -O2 -Wall -fomit-frame-pointer -fPIC -g
 LDFLAGS = -shared
 
@@ -45,7 +45,7 @@ all: $(TARGET) install
 $(TARGET): $(obj-y)
 	@echo "  LINK	 	$@"
 	@$(CC) $(CFLAGS) $(obj-y) -o $@.so $(LDFLAGS) -Wl,-Map,$@.map
-	@$(AR) $@.a $(obj-y)
+	@$(AR) rcs $@.a $(obj-y)
 
 install: $(TARGET)
 ifdef INSTALL_DIR_PREFIX
