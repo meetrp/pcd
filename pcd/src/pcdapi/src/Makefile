@@ -21,6 +21,10 @@ AR ?= ar
 CFLAGS = -MMD -O2 -Wall -fomit-frame-pointer -fPIC -g
 LDFLAGS = -shared
 
+ifdef LIB_DIR_PREFIX
+LDFLAGS += -L $(LIB_DIR_PREFIX)
+endif
+
 # includes
 CFLAGS += -I../include -I../../../include -I../../../../ipc/include
 ifdef INCLUDE_DIR_PREFIX
@@ -44,14 +48,20 @@ all: $(TARGET) install
 
 $(TARGET): $(obj-y)
 	@echo "  LINK	 	$@"
-	@$(CC) $(CFLAGS) $(obj-y) -o $@.so $(LDFLAGS) -Wl,-Map,$@.map
+ifdef USE_STATIC_LIBS
 	@$(AR) rcs $@.a $(obj-y)
+else
+	@$(CC) $(CFLAGS) $(obj-y) -o $@.so $(LDFLAGS) -Wl,-Map,$@.map
+endif
 
 install: $(TARGET)
 ifdef INSTALL_DIR_PREFIX
 	@mkdir -p $(INSTALL_DIR_PREFIX)/lib
-	@install $?.so $(INSTALL_DIR_PREFIX)/lib
+ifdef USE_STATIC_LIBS
 	@install $?.a $(INSTALL_DIR_PREFIX)/lib
+else
+	@install $?.so $(INSTALL_DIR_PREFIX)/lib
+endif
 endif
 
 clean:

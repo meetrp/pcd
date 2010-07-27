@@ -1,13 +1,22 @@
 #! /bin/sh
 
+#additional path may be needed
+#export PATH+=:<any_needed_path>:<any_needed_path>
+
 # Cross compiler
 # export CC=armeb-linux-uclibceabi-gcc
 
 # Include directory prefix
 # export INCLUDE_DIR_PREFIX=/projs/rt-embedded/include
 
+# Path to needed libraries
+# export LIB_DIR_PREFIX= <path_to_uClibc>/lib
+
 # Installation directory prefix
 # export INSTALL_DIR_PREFIX=/projs/rt-embedded/filesystem
+
+# determine which type of libraries to use - static or shared
+# export USE_STATIC_LIBS=y
 
 # IPC library version. Update according to the installed version.
 export IPC_VERSION=1.0.1

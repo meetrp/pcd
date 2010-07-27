@@ -36,7 +36,11 @@ ifdef CONFIG_X86
 CFLAGS += -DCONFIG_X86
 endif
 
-LDFLAGS += -L../../ipc/src -lipc -L./pcdapi/src -lpcd -lrt
+LDFLAGS += -L../../ipc/src -lipc -L./pcdapi/src -lpcd -lrt -lc
+
+ifdef LIB_DIR_PREFIX
+LDFLAGS += -L $(LIB_DIR_PREFIX)
+endif
 
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
 TARGET = pcd
