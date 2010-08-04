@@ -5,6 +5,7 @@
 
 # Cross compiler
 # export CC=armeb-linux-uclibceabi-gcc
+# export CC=mips-linux-gcc
 
 # Include directory prefix
 # export INCLUDE_DIR_PREFIX=/projs/rt-embedded/include
@@ -22,7 +23,7 @@
 export IPC_VERSION=1.0.1
 
 # PCD version. Update according to the installed version.
-export PCD_VERSION=1.0.3
+export PCD_VERSION=1.0.4
 
 # Enable ARM support, currently the only supported platform 
 # for crash infromation and registers. Other platforms will
@@ -31,6 +32,9 @@ export PCD_VERSION=1.0.3
 
 # Enable x86 platform specific support
 # export CONFIG_X86=y
+
+# Enable MIPS support
+# export CONFIG_MIPS=y
 
 echo "================================"
 echo PCD version: $PCD_VERSION

@@ -46,6 +46,9 @@
 #define __USE_GNU
 #include <sys/ucontext.h>
 #endif
+#ifdef CONFIG_MIPS /* MIPS registers */
+#include <sys/ucontext.h>
+#endif
 #include "process.h"
 
 
@@ -87,7 +90,8 @@ typedef struct exception_t
     struct sigcontext regs;
 #endif
 
-#ifdef CONFIG_X86 /* x86 processor context */
+/* x86 processor context */ /* MIPS registers */
+#if defined(CONFIG_X86) || defined(CONFIG_MIPS)
     mcontext_t uc_mctx;
 #endif
 

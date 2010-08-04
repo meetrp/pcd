@@ -258,6 +258,52 @@ static void PCD_dump_fault_info( exception_t *exception )
         return;
 #endif
 
+#ifdef CONFIG_MIPS /* Print MIPS registers */
+    i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nMIPS registers:\n\n"
+                  "regmask=0x%08x\n"
+                  "status=0x%08x\n"
+                  "pc=0x%08llx\n"
+                  "fpregs.fp_r.fp_dregs=0x%08f\n"
+                  "fpregs.fp_r.fp_fregs[NFPREG]._fp_fregs=0x%08f\n"
+                  "fpregs.fp_r.fp_fregs[NFPREG]._fp_pad=0x%08x\n"
+                  "fp_owned=0x%08x\n"
+                  "fpc_csr=0x%08x\n"
+                  "fpc_eir=0x%08x\n"
+                  "used_math=0x%08x\n"
+                  "dsp=0x%08x\n"
+                  "mdhi=0x%08llx\n"
+                  "mdlo=0x%08llx\n"
+                  "hi1=0x%08lx\n"
+                  "lo1=0x%08lx\n"
+                  "hi2=0x%08lx\n"
+                  "lo2=0x%08lx\n"
+                  "hi3=0x%08lx\n"
+                  "lo3=0x%08lx\n",
+                  exception->uc_mctx.regmask,
+                  exception->uc_mctx.status,
+                  exception->uc_mctx.pc,
+                  exception->uc_mctx.fpregs.fp_r.fp_dregs[NFPREG],
+                  exception->uc_mctx.fpregs.fp_r.fp_fregs[NFPREG]._fp_fregs,
+                  exception->uc_mctx.fpregs.fp_r.fp_fregs[NFPREG]._fp_pad,
+                  exception->uc_mctx.fp_owned,
+                  exception->uc_mctx.fpc_csr,
+                  exception->uc_mctx.fpc_eir,
+                  exception->uc_mctx.used_math,
+                  exception->uc_mctx.dsp,
+                  exception->uc_mctx.mdhi,
+                  exception->uc_mctx.mdlo,
+                  exception->uc_mctx.hi1,
+                  exception->uc_mctx.lo1,
+                  exception->uc_mctx.hi2,
+                  exception->uc_mctx.lo2,
+                  exception->uc_mctx.hi3,
+                  exception->uc_mctx.lo3);
+
+
+    if ( i<0 )
+        return;
+#endif
+
 #ifdef CONFIG_X86 /* Print X86 registers */
     i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nX86 registers:\n\n"
                   "cr2=0x%08lx\n"

@@ -36,6 +36,11 @@ ifdef CONFIG_X86
 CFLAGS += -DCONFIG_X86
 endif
 
+# Enable support for MIPS?
+ifdef CONFIG_MIPS
+CFLAGS += -DCONFIG_MIPS
+endif
+
 LDFLAGS += -L../../ipc/src -lipc -L./pcdapi/src -lpcd -lrt -lc
 
 ifdef LIB_DIR_PREFIX

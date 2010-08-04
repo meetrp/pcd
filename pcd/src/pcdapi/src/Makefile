@@ -41,6 +41,11 @@ ifdef CONFIG_X86
 CFLAGS += -DCONFIG_X86
 endif
 
+# Enable support for MIPS?
+ifdef CONFIG_MIPS
+CFLAGS += -DCONFIG_MIPS
+endif
+
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
 TARGET = libpcd
 

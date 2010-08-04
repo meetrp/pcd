@@ -498,8 +498,8 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
     Int32 total = sizeof( exception_t );
     Int32 i;
 
-/* ARM registers */ /* X86 processor context */
-#if defined(CONFIG_ARM) || defined(CONFIG_X86)
+/* ARM registers */ /* X86 processor context */ /* MIPS registers */
+#if defined(CONFIG_ARM) || defined(CONFIG_X86) || defined(CONFIG_MIPS)
     ucontext_t *ctx = (ucontext_t *)context;
 #endif
 
@@ -520,8 +520,9 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
     exception.regs = ctx->uc_mcontext;
 #endif
 
-#ifdef CONFIG_X86 /* X86 processor context */
-    exception.uc_mctx = ctx->uc_mcontext; 
+/* X86 processor context */ /* MIPS registers */
+#if defined(CONFIG_X86) || defined(CONFIG_MIPS)
+    exception.uc_mctx = ctx->uc_mcontext;
 #endif
 
     fd1 = open( mapsFile, O_RDONLY );

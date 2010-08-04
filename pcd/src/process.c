@@ -128,8 +128,8 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
         Int32 fd;
         Int32 i;
 
-/* ARM registers */ /* X86 processor context */
-#if defined(CONFIG_ARM) || defined(CONFIG_X86)
+/* ARM registers */ /* X86 processor context */ /* MIPS registers */
+#if defined(CONFIG_ARM) || defined(CONFIG_X86) || defined(CONFIG_MIPS)
         ucontext_t *ctx = (ucontext_t *)context;
 #endif
         Char *procName = "pcd";
@@ -160,7 +160,8 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
         exception.regs = ctx->uc_mcontext;
 #endif
 
-#ifdef CONFIG_X86 /* X86 processor context */
+/* X86 processor context */ /* MIPS registers */
+#if defined(CONFIG_X86) || defined(CONFIG_MIPS)
         exception.uc_mctx = ctx->uc_mcontext; 
 #endif
         /* Open the self exception file */
