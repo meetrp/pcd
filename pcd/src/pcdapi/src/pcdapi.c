@@ -377,6 +377,7 @@ STATUS PCD_api_register_exception_handlers( Char *name, Cleanup_func cleanup )
     SETSIG(sa, SIGILL,  PCD_exception_default_handler);
     SETSIG(sa, SIGBUS,  PCD_exception_default_handler);
     SETSIG(sa, SIGQUIT, PCD_exception_default_handler);
+    SETSIG(sa, SIGFPE,  PCD_exception_default_handler);
 
     return STATUS_OK;
 }

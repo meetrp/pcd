@@ -25,9 +25,11 @@ export IPC_VERSION=1.0.1
 # PCD version. Update according to the installed version.
 export PCD_VERSION=1.0.4
 
-# Enable ARM support, currently the only supported platform 
-# for crash infromation and registers. Other platforms will
-# show a minimal crash log.
+# Enable architecture support, currently the supported platforms
+# for crash infromation and registers are ARM, x86 and MIPS.
+# Other platforms will show a minimal crash log.
+
+# Enable ARM support
 # export CONFIG_ARM=y
 
 # Enable x86 platform specific support
