@@ -47,21 +47,21 @@ echo Install dir=${INSTALL_DIR_PREFIX:-<none>}
 echo "================================"
 
 echo "Building ipc library..."
-make -C ipc/src
+make -C ipc/src --no-print-directory
 
 echo "Building pcdapi library..."
-make -C pcd/src/pcdapi/src
+make -C pcd/src/pcdapi/src --no-print-directory
 
 echo "Building pcd application..."
-make -C pcd/src
+make -C pcd/src --no-print-directory
 
 echo "Building pcdparser application..."
-make -C pcd/src/parser/src
+make -C pcd/src/parser/src --no-print-directory
 
 if [ $INSTALL_DIR_PREFIX ]; then
 echo "Installing to $INSTALL_DIR_PREFIX..."
-make -C ipc/src install
-make -C pcd/src/pcdapi/src install
-make -C pcd/src install
-make -C pcd/src/parser/src install
+make -C ipc/src install --no-print-directory
+make -C pcd/src/pcdapi/src install --no-print-directory
+make -C pcd/src install --no-print-directory
+make -C pcd/src/parser/src install --no-print-directory
 fi
