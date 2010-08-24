@@ -129,7 +129,7 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
         Int32 i;
 
 /* ARM registers */ /* X86 processor context */ /* MIPS registers */
-#if defined(CONFIG_ARM) || defined(CONFIG_X86) || defined(CONFIG_MIPS)
+#if defined(CONFIG_PCD_PLATFORM_ARM) || defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
         ucontext_t *ctx = (ucontext_t *)context;
 #endif
         Char *procName = "pcd";
@@ -156,16 +156,16 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
         exception.handler_errno = errno;
         exception.fault_address = info->si_addr;
         clock_gettime(CLOCK_REALTIME, &exception.time);
-#ifdef CONFIG_ARM /* ARM registers */
+#ifdef CONFIG_PCD_PLATFORM_ARM /* ARM registers */
         exception.regs = ctx->uc_mcontext;
 #endif
 
 /* X86 processor context */ /* MIPS registers */
-#if defined(CONFIG_X86) || defined(CONFIG_MIPS)
+#if defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
         exception.uc_mctx = ctx->uc_mcontext; 
 #endif
         /* Open the self exception file */
-        fd = open( PCD_PROCESS_SELF_EXCEPTION_DIRECTORY "/" PCD_PROCESS_SELF_EXCEPTION_FILE, O_CREAT | O_WRONLY | O_SYNC );
+        fd = open( CONFIG_PCD_PROCESS_SELF_EXCEPTION_DIRECTORY "/" CONFIG_PCD_PROCESS_SELF_EXCEPTION_FILE, O_CREAT | O_WRONLY | O_SYNC );
 
         if ( fd > 0 )
         {
@@ -245,7 +245,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
     int i;
     char *args[PCD_PROCESS_MAX_PARAMS+3];
     procObj_t *next;
-    Char params[ PCD_MAX_PARAM_SIZE ] = { 0};
+    Char params[ CONFIG_PCD_MAX_PARAM_SIZE ] = { 0};
     rule_t *rule;
 
     /* Check validity of parameters */
@@ -267,7 +267,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
     if ( !pid )
     {
         Char *token;
-        Char vars[ PCD_MAX_PARAM_SIZE ];
+        Char vars[ CONFIG_PCD_MAX_PARAM_SIZE ];
         Uint32 varsIdx = 0;
 
         /* Setup executable name */
@@ -282,7 +282,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
         else if ( rule->params )
         {
             /* Use default parameters */
-            strncpy( params, rule->params, PCD_MAX_PARAM_SIZE - 1 );
+            strncpy( params, rule->params, CONFIG_PCD_MAX_PARAM_SIZE - 1 );
         }
         else
         {
@@ -291,7 +291,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
         }
 
         /* Clear parameters array */
-        memset( vars, 0, PCD_MAX_PARAM_SIZE );
+        memset( vars, 0, CONFIG_PCD_MAX_PARAM_SIZE );
 
         /* Get first token */
         token = strtok( params, PCD_PROCESS_WHITE_SPACES );
@@ -308,22 +308,22 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
             {
                 Char *env = NULL;
                 Char *var;
-                Char buff[ PCD_MAX_PARAM_SIZE ];
+                Char buff[ CONFIG_PCD_MAX_PARAM_SIZE ];
 
-                /* Get the variable value from PCD_TEMP_PATH */
+                /* Get the variable value from CONFIG_PCD_TEMP_PATH */
                 {
                     Int32 fd;
                     Char filename[ 255 ];
 
-                    sprintf( filename, PCD_TEMP_PATH "/%s", ptr + 1 );
+                    sprintf( filename, CONFIG_PCD_TEMP_PATH "/%s", ptr + 1 );
 
                     fd =  open( filename, O_RDONLY );
                     if ( fd > 0 )
                     {
-                        memset( buff, 0, PCD_MAX_PARAM_SIZE );
+                        memset( buff, 0, CONFIG_PCD_MAX_PARAM_SIZE );
 
                         /* Read the variable value from the file */
-                        if ( read( fd, buff, PCD_MAX_PARAM_SIZE-1 ) > 0 )
+                        if ( read( fd, buff, CONFIG_PCD_MAX_PARAM_SIZE-1 ) > 0 )
                         {
                             env = buff;
                         }
@@ -343,24 +343,24 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
                     }
                     else
                     {
-                        memset( buff, 0, PCD_MAX_PARAM_SIZE );
+                        memset( buff, 0, CONFIG_PCD_MAX_PARAM_SIZE );
 
                         /* Copy the value to the temporary buffer */
-                        strncpy( buff, env, PCD_MAX_PARAM_SIZE-1 );
+                        strncpy( buff, env, CONFIG_PCD_MAX_PARAM_SIZE-1 );
                         env = buff;
                     }
                 }
 
                 /* Copy to a local buffer */
-                strncpy( vars + varsIdx, env, PCD_MAX_PARAM_SIZE-varsIdx-1 );
+                strncpy( vars + varsIdx, env, CONFIG_PCD_MAX_PARAM_SIZE-varsIdx-1 );
                 env = &vars[ varsIdx ];
 
                 /* Advance the index for next buffer */
                 varsIdx += strlen( vars ) + 1;
-                if ( varsIdx >= PCD_MAX_PARAM_SIZE - 1 )
+                if ( varsIdx >= CONFIG_PCD_MAX_PARAM_SIZE - 1 )
                 {
                     /* No place in buffer */
-                    varsIdx = PCD_MAX_PARAM_SIZE - 1;
+                    varsIdx = CONFIG_PCD_MAX_PARAM_SIZE - 1;
                 }
 
                 /* Replace white spaces with NULLs */

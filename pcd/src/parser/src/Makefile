@@ -5,7 +5,7 @@
 #  modify it under the terms of the GNU Lesser General Public License
 #  version 2.1, as published by the Free Software Foundation.
 # 
-#  This library is distributed in the hope that it will be useful,
+#  This application is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #  Lesser General Public License for more details.
@@ -14,14 +14,16 @@
 #  License along with this library; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #
+#  Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
+# 
 #  Makefile for pcdparser application
 
 CC = gcc
-CFLAGS = -MMD -O2 -Wall -fomit-frame-pointer -DPCD_HOST_BUILD
+CFLAGS += -MMD -O2 -Wall -fomit-frame-pointer -DPCD_HOST_BUILD
 LDFLAGS =
 
 # includes
-CFLAGS += -I../include -I../../../include
+CFLAGS += -I$(PCD_ROOT)/pcd/src/parser/include -I$(PCD_ROOT)/pcd/include
 
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
 TARGET = pcdparser
@@ -33,10 +35,11 @@ $(TARGET): $(obj-y)
 	@$(CC) $(CFLAGS) $(obj-y) -o $@ $(LDFLAGS) -Wl,-Map,$@.map
 
 install: $(TARGET)
+	install $(TARGET) $(PCD_BIN)/host
 
 clean:
 	@rm -f $(TARGET) $(obj-y) $(obj-y:.o=.d) $(TARGET).map
-
+	@rm -f $(PCD_ROOT)/bin/host/$(TARGET)
 
 %.o: %.c
 	@echo "  CC [C] 	$@"

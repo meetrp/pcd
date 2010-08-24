@@ -39,14 +39,14 @@
 /**************************************************************************/
 /*      INCLUDES                                                          */
 /**************************************************************************/
-#ifdef CONFIG_ARM /* ARM registers */
+#ifdef CONFIG_PCD_PLATFORM_ARM /* ARM registers */
 #include <asm/sigcontext.h>
 #endif
-#ifdef CONFIG_X86 /* X86 processor context */
+#ifdef CONFIG_PCD_PLATFORM_X86 /* x86 processor context */
 #define __USE_GNU
 #include <sys/ucontext.h>
 #endif
-#ifdef CONFIG_MIPS /* MIPS registers */
+#ifdef CONFIG_PCD_PLATFORM_MIPS /* MIPS registers */
 #include <sys/ucontext.h>
 #endif
 #include "process.h"
@@ -86,12 +86,12 @@ typedef struct exception_t
     /* The last error in errno when the exception handler got called. */
     Uint32 handler_errno;
 
-#ifdef CONFIG_ARM /* ARM registers */
+#ifdef CONFIG_PCD_PLATFORM_ARM /* ARM registers */
     struct sigcontext regs;
 #endif
 
 /* x86 processor context */ /* MIPS registers */
-#if defined(CONFIG_X86) || defined(CONFIG_MIPS)
+#if defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
     mcontext_t uc_mctx;
 #endif
 

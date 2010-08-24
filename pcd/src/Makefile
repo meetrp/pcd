@@ -14,38 +14,21 @@
 #  License along with this library; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #
+#  Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
+# 
 #  Makefile for pcd application
 
-CC ?= gcc
-CFLAGS = -MMD -O2 -Wall -fomit-frame-pointer -g
-LDFLAGS = 
+-include $(PCD_ROOT)/.config
+
+CC ?= $(PCD_CROSS_COMPILER_PREFIX)gcc
+CFLAGS += -MMD -O2 -Wall -fomit-frame-pointer -g $(PCD_EXTRA_CFLAGS)
+LDFLAGS += $(PCD_EXTRA_LDFLAGS)
 
 # includes
-CFLAGS += -I../include -I./pcdapi/include -I../../ipc/include
-ifdef INCLUDE_DIR_PREFIX
-CFLAGS += -I$(INCLUDE_DIR_PREFIX)
-endif
+CFLAGS += -I$(PCD_ROOT)/pcd/include -I$(PCD_ROOT)/pcd/src/pcdapi/include -I$(PCD_ROOT)/ipc/include
 
-# Enable support for ARM?
-ifdef CONFIG_ARM
-CFLAGS += -DCONFIG_ARM
-endif
-
-# Enable support for x86
-ifdef CONFIG_X86
-CFLAGS += -DCONFIG_X86
-endif
-
-# Enable support for MIPS?
-ifdef CONFIG_MIPS
-CFLAGS += -DCONFIG_MIPS
-endif
-
-LDFLAGS += -L../../ipc/src -lipc -L./pcdapi/src -lpcd -lrt -lc
-
-ifdef LIB_DIR_PREFIX
-LDFLAGS += -L $(LIB_DIR_PREFIX)
-endif
+# Libraries
+LDFLAGS += -L$(PCD_ROOT)/ipc/src -lipc -L$(PCD_ROOT)/pcd/src/pcdapi/src -lpcd -lrt -lc
 
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
 TARGET = pcd
@@ -56,15 +39,19 @@ $(TARGET): $(obj-y)
 	@echo "  LINK	 	$@"
 	@$(CC) $(CFLAGS) $(obj-y) -o $@ $(LDFLAGS) -Wl,-Map,$@.map
 
-install: $(TARGET)
-ifdef INSTALL_DIR_PREFIX
-	@mkdir -p $(INSTALL_DIR_PREFIX)/usr/sbin
-	@install $? $(INSTALL_DIR_PREFIX)/usr/sbin
-endif
+install: $(TARGET) install_internal
+ifdef CONFIG_PCD_INSTALL_DIR_PREFIX
+	@mkdir -p $(CONFIG_PCD_INSTALL_DIR_PREFIX)/usr/sbin
+	@install $(TARGET) $(CONFIG_PCD_INSTALL_DIR_PREFIX)/usr/sbin
+endif	
+	
+install_internal:	
+	@mkdir -p $(PCD_BIN)/target/usr/sbin
+	@install $(TARGET) $(PCD_BIN)/target/usr/sbin
 
 clean:
 	@rm -f $(TARGET) $(obj-y) $(obj-y:.o=.d) $(TARGET).map
-
+	@rm -f $(PCD_BIN)/target/usr/sbin/$(TARGET)
 
 %.o: %.c
 	@echo "  CC [C] 	$@"

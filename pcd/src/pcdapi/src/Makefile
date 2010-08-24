@@ -14,37 +14,19 @@
 #  License along with this library; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #
+#  Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
+# 
 #  Makefile for pcd library
 
-CC ?= gcc
-AR ?= ar
-CFLAGS = -MMD -O2 -Wall -fomit-frame-pointer -fPIC -g
-LDFLAGS = -shared
+-include $(PCD_ROOT)/.config
 
-ifdef LIB_DIR_PREFIX
-LDFLAGS += -L $(LIB_DIR_PREFIX)
-endif
+CC ?= $(PCD_CROSS_COMPILER_PREFIX)gcc
+AR ?= $(PCD_CROSS_COMPILER_PREFIX)ar
+CFLAGS += -MMD -O2 -Wall -fomit-frame-pointer -fPIC -g $(PCD_EXTRA_CFLAGS)
+LDFLAGS += -shared $(PCD_EXTRA_LDFLAGS)
 
 # includes
-CFLAGS += -I../include -I../../../include -I../../../../ipc/include
-ifdef INCLUDE_DIR_PREFIX
-CFLAGS += -I$(INCLUDE_DIR_PREFIX)
-endif
-
-# Enable support for ARM?
-ifdef CONFIG_ARM
-CFLAGS += -DCONFIG_ARM
-endif
-
-# Enable support for x86
-ifdef CONFIG_X86
-CFLAGS += -DCONFIG_X86
-endif
-
-# Enable support for MIPS?
-ifdef CONFIG_MIPS
-CFLAGS += -DCONFIG_MIPS
-endif
+CFLAGS += -I$(PCD_ROOT)/pcd/include -I$(PCD_ROOT)/pcd/src/pcdapi/include -I$(PCD_ROOT)/ipc/include
 
 obj-y := $(patsubst %.c,%.o,$(shell ls *.c 2> /dev/null))
 TARGET = libpcd
@@ -53,24 +35,33 @@ all: $(TARGET) install
 
 $(TARGET): $(obj-y)
 	@echo "  LINK	 	$@"
-ifdef USE_STATIC_LIBS
+ifdef PCD_USE_STATIC_LIBS
 	@$(AR) rcs $@.a $(obj-y)
 else
 	@$(CC) $(CFLAGS) $(obj-y) -o $@.so $(LDFLAGS) -Wl,-Map,$@.map
 endif
 
-install: $(TARGET)
-ifdef INSTALL_DIR_PREFIX
-	@mkdir -p $(INSTALL_DIR_PREFIX)/lib
+install: $(TARGET) install_internal
+ifdef CONFIG_PCD_INSTALL_DIR_PREFIX
+	@mkdir -p $(CONFIG_PCD_INSTALL_DIR_PREFIX)/lib
 ifdef USE_STATIC_LIBS
-	@install $?.a $(INSTALL_DIR_PREFIX)/lib
+	@install $(TARGET).a $(CONFIG_PCD_INSTALL_DIR_PREFIX)/lib
 else
-	@install $?.so $(INSTALL_DIR_PREFIX)/lib
+	@install $(TARGET).so $(CONFIG_PCD_INSTALL_DIR_PREFIX)/lib
 endif
+endif
+
+install_internal:
+	@mkdir -p $(PCD_BIN)/target/lib
+ifdef USE_STATIC_LIBS
+	@install $(TARGET).a $(PCD_BIN)/target/lib
+else
+	@install $(TARGET).so $(PCD_BIN)/target/lib
 endif
 
 clean:
 	@rm -f $(TARGET).so $(TARGET).a $(obj-y) $(obj-y:.o=.d) $(TARGET).map
+	@rm -f $(PCD_BIN)/target/lib/$(TARGET).*
 
 
 %.o: %.c

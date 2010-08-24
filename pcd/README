@@ -1,4 +1,4 @@
-PCD - Process Control Daemon application and library v0.0.1 - March 2010
+PCD - Process Control Daemon application and library v0.0.5 - August 2010
 
 -------------------------------------------------------------------------------
 
@@ -11,29 +11,34 @@ crashes.
 
 The PCD application is designed to run on an embedded target platform.
 It was developed and tested on an ARM11 platform. However, the code is 
-portable and was compiled and tested on in x86 environment as well.
+portable and was compiled and tested on in x86 and MIPS environments as well.
 
 In order to activate the PCD, it must be given with a startup script, which
-contains all the required rules. See exaples and the design document for
-more details.
+contains all the required rules. See the documentation, examples and the 
+design document for more details.
+
+Configuration:
+The PCD project supports Kconfig configuration, similarly to the Linux Kernel.
+The supported configuration commands are:
+- make defconfig - Configure default PCD settings.
+- make menuconfig - Configure the PCD settings in a textual menu.
+- make xconfig - Configure the PCD settings in a graphical menu (requires qt-devel library).
+- make oldconfig - Configure the PCD using existing settings in .config file.
+
+Don't forget to:
+- Select the correct platform (or other if it is not supported).
+- Setup your cross compiler.
+- Setup your target installation directory.
 
 Compilation:
-Either use the build-all.sh script, or implement your own Makefile wrapper
-around the PCD's Makefile set. The PCD requires the pcdapi and ipc libraries.
-Please review the build script which defines the cross compiler, include and
-installation directories required to finalize this process.
+Run "make all" or "make pcd" to compile everything.
 
-Example:
-        # Cross compiler
-        export CC=armeb-linux-uclibceabi-gcc
+Installation:
+Run "make install" to install the executables and libraries in the target filesystem,
+according to the configuration. The binaries are also installed to bin/host and bin/target
+directories for your reference.
 
-        # Include directory prefix
-        export INCLUDE_DIR_PREFIX=/projects/rt-embedded/include
-
-        # Installation directory prefix
-        export INSTALL_DIR_PREFIX=/projects/rt-embedded/filesystem
-
-Command line parameters (on the target):
+Command line parameters for the PCD (on the target):
 
 -f FILE, --file=FILE 	: Specify PCD rules file.
 -p, --print		: Print parsed configuration.
@@ -155,20 +160,26 @@ Command line parameters (on the host):
 
 DOCUMENTATION
 
-Documentation is available in the PCD's homepage in SourceForge.
+Documentation is available in the PCD's homepage in the Real-Time Embedded 
+website: http://www.rt-embedded.com/pcd
+
+The design document is available in the PCD project homepage at SourceForge:
+http://sourceforge.net/projects/pcd
 
 -------------------------------------------------------------------------------
 
 AUTHOR
 
-This library and application was designed and written by Hai Shalom.
-If you have any questions, comments or remarks, please contact me:
+This library and application was originally designed and written by Hai Shalom.
+The code was written for Texas Instruments and exported to open source. Now it
+is managed and maintained by Hai Shalom as part of the PCD Project group.
+
+If you have any questions, comments or remarks, or want to join the PCD Project
+group, please contact me:
 hai@rt-embedded.com
 
 
 The PCD Homepage:
 http://www.rt-embedded.com/pcd/
-
-The code is managed and maintained in SourceForge, under the PCD project:
-http://pcd.sourceforge.net/
+http://sourceforge.net/projects/pcd
 

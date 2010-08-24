@@ -118,7 +118,7 @@ STATUS PCD_api_init( void )
     }
 
     /* Start IPC */
-    if ( IPC_start( PCD_SERVER_NAME, &pcdContext, 0 ) != STATUS_OK )
+    if ( IPC_start( CONFIG_PCD_SERVER_NAME, &pcdContext, 0 ) != STATUS_OK )
     {
         PCD_PRINTF_STDERR( "Failed to start IPC" );
 
@@ -126,7 +126,7 @@ STATUS PCD_api_init( void )
     }
 
     /* Set owner */
-    if ( IPC_set_owner( pcdContext, PCD_OWNER_ID ) != STATUS_OK )
+    if ( IPC_set_owner( pcdContext, CONFIG_PCD_OWNER_ID ) != STATUS_OK )
     {
         IPC_stop( pcdContext );
 

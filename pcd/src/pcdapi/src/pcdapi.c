@@ -18,6 +18,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
+ * 
+ * Change log:
+ * - Support dynamic configurations from kconfig
+ * - Support MIPS platform
+ * - Support x86 platform
  */
 
 /* Author:
@@ -102,10 +108,10 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
         pcdApiInitDone = True;
     }
 
-    if ( IPC_get_context_by_owner( &pcdCtx, PCD_OWNER_ID ) != STATUS_OK )
+    if ( IPC_get_context_by_owner( &pcdCtx, CONFIG_PCD_OWNER_ID ) != STATUS_OK )
         return -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS;
 
-    sprintf( pcdClient, PCD_CLIENTS_NAME_PREFIX "%d", getpid() );
+    sprintf( pcdClient, CONFIG_PCD_CLIENTS_NAME_PREFIX "%d", getpid() );
 
     /* Create temporary destination point */
     if ( IPC_start( pcdClient, &pcdTmpCtx, 0) != STATUS_OK )
@@ -163,7 +169,7 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
             if ( ptr )
             {
                 /* Copy optional parameters to activate the rule differently */
-                strncpy( data->params, ( Char *)ptr, PCD_MAX_PARAM_SIZE - 1 );
+                strncpy( data->params, ( Char *)ptr, CONFIG_PCD_MAX_PARAM_SIZE - 1 );
             }
             break;
 
@@ -500,7 +506,7 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
     Int32 i;
 
 /* ARM registers */ /* X86 processor context */ /* MIPS registers */
-#if defined(CONFIG_ARM) || defined(CONFIG_X86) || defined(CONFIG_MIPS)
+#if defined(CONFIG_PCD_PLATFORM_ARM) || defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
     ucontext_t *ctx = (ucontext_t *)context;
 #endif
 
@@ -517,12 +523,12 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
     exception.handler_errno = errno;
     exception.fault_address = info->si_addr;
     clock_gettime(CLOCK_REALTIME, &exception.time);
-#ifdef CONFIG_ARM /* ARM registers */
+#ifdef CONFIG_PCD_PLATFORM_ARM /* ARM registers */
     exception.regs = ctx->uc_mcontext;
 #endif
 
 /* X86 processor context */ /* MIPS registers */
-#if defined(CONFIG_X86) || defined(CONFIG_MIPS)
+#if defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
     exception.uc_mctx = ctx->uc_mcontext;
 #endif
 

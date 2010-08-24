@@ -264,7 +264,7 @@ void PCD_main_loop( void )
 int main( Int32 argc, Char *argv[] )
 {
     /* Setup FIFO_SCHED level 1. Boost the priority immediately */
-    PCD_main_set_self_priority( PCD_PRIORITY, SCHED_FIFO );
+    PCD_main_set_self_priority( CONFIG_PCD_PRIORITY, SCHED_FIFO );
 
     if ( PCD_api_find_process_id( argv[0] ) > 0 )
     {

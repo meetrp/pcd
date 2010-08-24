@@ -1,0 +1,40 @@
+#
+# Automatically generated make config: don't edit
+# Tue Aug 24 15:43:52 2010
+#
+CONFIG_DEFCONFIG_LIST=".config"
+
+#
+# PCD Configuration
+#
+
+#
+# PCD Compile time configurations
+#
+# CONFIG_PCD_PLATFORM_ARM is not set
+# CONFIG_PCD_PLATFORM_X86 is not set
+CONFIG_PCD_PLATFORM_MIPS=y
+# CONFIG_PCD_PLATFORM_OTHER is not set
+CONFIG_PCD_CROSS_COMPILER_PREFIX="mips-linux-"
+CONFIG_PCD_EXTRA_CFLAGS=""
+CONFIG_PCD_EXTRA_LDFLAGS=""
+CONFIG_PCD_INSTALL_DIR_PREFIX="/home/'whoami'/fs"
+# CONFIG_PCD_USE_STATIC_LIBS is not set
+# CONFIG_PCD_DEBUG is not set
+
+#
+# PCD runtime configuration
+#
+CONFIG_PCD_MAX_PARAM_SIZE=256
+CONFIG_PCD_MAX_LOG_SIZE=256
+CONFIG_PCD_PRIORITY=1
+CONFIG_PCD_TEMP_PATH="/tmp"
+CONFIG_PCD_PROCESS_SELF_EXCEPTION_DIRECTORY="/tmp"
+CONFIG_PCD_PROCESS_SELF_EXCEPTION_FILE="pcd_self_exception.txt"
+
+#
+# IPC Configuration
+#
+CONFIG_PCD_OWNER_ID=3085
+CONFIG_PCD_SERVER_NAME="pcd-server"
+CONFIG_PCD_CLIENTS_NAME_PREFIX="pcd-client-"

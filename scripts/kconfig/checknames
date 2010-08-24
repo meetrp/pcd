@@ -1,0 +1,73 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# check for duplicate variable names in different projects.
+# run: checknames tools/configs/TI_RGDK.Kconfig
+
+my @Vars;
+my @extra_dirs = (".", "src/busybox-1.00", "src/uClibc-0.9.27", "src/kernel/linux-2.6.10", "");
+my $tempfile = "/tmp/checknames.tmp";
+
+open(OUTFILE, '>', $tempfile) 
+  or die "Can't open $tempfile\n";
+
+foreach my $file (@ARGV) {
+  process($file);
+}
+
+foreach (@Vars) {
+  print OUTFILE $_,"\n";
+}
+
+system("sort -k 3 $tempfile | uniq -Df 2 | uniq -uf 1");
+
+unlink($tempfile);
+
+
+sub process {
+  my ($filename) = @_;
+  my $input;
+  my $found = 0;
+  my $newfile;
+
+  foreach my $path (@extra_dirs) {
+    $newfile = $path . "/" . $filename;
+#    print "Looking new: !$newfile!\n";
+    if (-e $newfile ) {
+      open $input, $newfile;
+      $found = 1;
+      last;
+    }
+  }
+
+  if ($found == 0) {
+#    print "Couldn't find: $filename\n";
+    return;
+  }
+
+  local $_;
+  while (<$input>) {		# note use of indirection
+    if (/^[\s]*source "?(\S*[^"])"*/) {
+      my $bah = $1;
+      $bah =~ s/("|\s)//g;
+ #    print "Sourcing: !$_!";
+      process($bah);
+      next;
+    }
+    if (/^ *config (.*)/) {
+      my $tmp = $1;
+      my $pkg = "XX";
+      
+      $tmp =~ s/^CONFIG_//;
+    SWITCH: {
+	if ( $newfile =~ /busybox/) { $pkg = "BB"; last SWITCH; }
+	if ( $newfile =~ /uClibc/) { $pkg = "UC"; last SWITCH; }
+	if ( $newfile =~ /linux-/) { $pkg = "LI"; last SWITCH; }
+      }
+      $tmp =  $newfile ." ". $pkg ." ". $tmp;
+
+      push @Vars, $tmp;
+    }
+  }
+}

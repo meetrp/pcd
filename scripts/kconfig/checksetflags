@@ -1,0 +1,217 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import string
+import re
+import getopt
+
+progname="checksetflags"
+flagfile="baseconfig"
+configfile=".config"
+outputfile=".config"
+validate=0
+correct=1
+quiet=0
+rules=0
+outputfile_requested=0
+configfile_requested=0
+yes_demotion='y'
+module_promotion='y'
+yd=0
+mpo=0
+strict=0
+Rules={}
+flag_file_missing_ok=0
+validation_fail=0
+longest_flag=0
+def rule_line(title, value):
+	sys.stdout.write("%s	  |" % (title))
+	sys.stdout.write("%s	|" % (Rules[value]['y']))
+	sys.stdout.write("%s	|" % (Rules[value]['m']))
+	sys.stdout.write("%s   |\n" % (Rules[value]['n']))
+def show_rules():
+	print "Base	\\Config"
+	print "	 \\Yes	 Mod	 No"
+	print "	  |------------------|"
+	rule_line("Yes",'y')
+	print "	  |------------------|"
+	rule_line("Mod",'m')
+	print "	  |------------------|"
+	rule_line("No",'n')
+	print "	  |------------------|"
+
+def parse_kconfig(fconfig):
+	ConfigDict={}
+	SetConfigs_re = re.compile('^(CONFIG_.*)=(.*)$', re.MULTILINE)
+	set = SetConfigs_re.findall(fconfig)
+	UnSetConfigs_re = re.compile('^# (CONFIG_.*) is not set', re.MULTILINE)
+	unset = UnSetConfigs_re.findall(fconfig)
+	for key, value in set: 
+		ConfigDict[key]=value
+	for key in unset:
+		ConfigDict[key]="n"
+	return ConfigDict
+
+
+def parse_flags(fflags):
+	global longest_flag
+	FlagsDict={}
+	Flags_re = re.compile('^(CONFIG_.*)=(.*)$', re.MULTILINE)
+	flags= Flags_re.findall(fflags)
+	for key, value in flags:
+		FlagsDict[key]=value
+		if (len(key) > longest_flag):
+			longest_flag=len(key)
+	return FlagsDict
+
+def pad_cell(content, cellsize):
+	while (len(content) < cellsize):
+		content=content + " "
+	return content
+	
+def validate_pass(flag, value, avalue):
+	print "%s	%s 	%s	Pass" %(pad_cell(flag,longest_flag), value, avalue)
+
+def validate_fail(flag, value, avalue):
+	print "%s	%s	%s	Fail" %(pad_cell(flag,longest_flag), value, avalue)
+	validation_fail=1
+def process_config(Config, Flags, validate, correct):
+	if (validate):
+		print "%s	value	config	Pass/Fail" % (pad_cell("Flag",longest_flag))
+	for flag in Flags.keys():
+		if Config.has_key(flag):
+			if (validate):
+				if (Config[flag] == Rules[Flags[flag]][Configs[flag]]):
+					validate_pass(flag, Flags[flag], Config[flag])
+				else:
+					validate_fail(flag, Flags[flag], Config[flag]) 				
+			if (correct):
+				Config[flag]=Rules[Flags[flag]][Configs[flag]]
+		else:
+			if (validate):
+				validate_fail(flag, Flags[flag], 'n')
+			if (correct): 				
+				Config[flag]=Flags[flag]
+
+	return Config
+
+def output_config(Config):
+	try:
+		o=open(outputfile, "w")
+	except:
+		print 'Could not open file "%s"'
+		sys.exit(1)
+	o.write("#\n# Automatically generated make checksetconfig: don't edit\n#\n")
+	for key in Config.keys():
+		if (Config[key] != 'n'):
+			o.write("%s=%s\n" % (key, Config[key]))
+		else:
+			o.write("# %s is not set\n" % (key))
+	
+def errormsg(msg):
+	print 
+	print "ERROR: %s" % (msg)
+
+def usage():
+	print
+	print "%s\n"\
+              "			[-c <kernel config file> | --config-file <kernel config file>]\n" \
+	      "			[-f <flag file> | --flag-file <flag file>]\n" \
+	      "			[-o <output file> | --output-file <output-file>]\n" \
+	      "			[-v | --validate]\n" \
+	      "			[-q | --quiet]\n" \
+	      "			[-n | --no-file-output ]\n" \
+	      "			[-s | --strict-values ]\n" \
+	      "			[-p | --module-promotion-off ]\n" \
+	      "			[-d | --yes-demotion ]\n" \
+	      "			[-r | --show-rules ]\n" \
+	      "			[-z | --zero-exit-error (only for missing flag file) ]\n" \
+	      "			[-e | --error-return-validation ]\n" \
+	      % (progname)
+	print
+	sys.exit(1)
+try:
+	opts, args = getopt.getopt(sys.argv[1:], "f:c:o:vqnspdrze", \
+		    ["flag-file=","config-file=","output-file=","validate","quiet","no-file-output", \
+		     "strict-values", "module-promotion-off", "yes-demotion","show-rules",\
+		     "zero-exit-error", "error-return-validation"])
+except:
+	usage()
+
+for o, a in opts:
+	if ( o == "-c" or o == "--config-file"):
+		configfile_requested=1
+		configfile=a
+	if ( o == "-f" or o == "--flag-file"):
+		flagfile=a
+	if ( o == "-o" or o == "--output-file"):
+		outputfile_requested=1
+		outputfile=a
+	if ( o == "-v" or o == "--validate"):
+		validate=1
+	if ( o == "-q" or o == "--quiet"):
+		quiet=1
+	if ( o == "-n" or o == "--no-file-output"):
+		correct=0
+	if ( o == "-d" or o == "--yes-demotion"):
+		yd=1
+	if ( o == "-p" or o == "--module-promotion-off"):
+		mpo=1
+	if ( o == "-s" or o == "--strict-values"):
+		strict=1
+	if ( o == "-r" or o == "--show-rules"):
+		rules=1
+	if ( o == "-z" or o == "--zero-exit-error"):
+		flag_file_missing_ok=1
+	if ( o == "-e" or o == "--error-return-validation"):
+		validation_error=1
+if yd:
+	yes_demotion='m'
+
+if mpo:
+	module_promotion='m'
+
+if strict:
+	yes_demotion='m'
+	module_promotion='y'
+
+Rules={'y': {'y':'y','m': module_promotion,'n':'y'},
+       'm': {'y': yes_demotion,'m':'m','n':'m'},
+       'n': {'y':'n','m':'n','n':'n'}}
+
+if rules:
+	show_rules()
+	sys.exit(0) 
+
+
+if not os.path.isfile(configfile):
+	errormsg('Config file "%s" not found.' % (configfile))
+	usage()
+
+if not os.path.isfile(flagfile):
+	errormsg('Flag file "%s" not found.' % (flagfile))
+	if flag_file_missing_ok:
+		sys.exit(0)
+	else:
+		usage()
+if configfile_requested and not outputfile_requested:
+	outputfile=configfile
+if not quiet:
+	print "config-file = %s" % (configfile)
+	print "flag-file   = %s" % (flagfile)
+	print "output-file = %s" % (outputfile)
+
+fconfig=open(configfile).read()
+fflags=open(flagfile).read()
+
+Configs=parse_kconfig(fconfig)
+
+Flags=parse_flags(fflags)
+
+Config=process_config(Configs,Flags,validate,correct)
+if (correct):
+	output_config(Config)
+
+if validation_fail and validation_error:
+	sys.exit(2)

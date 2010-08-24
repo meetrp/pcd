@@ -18,6 +18,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
+ * 
+ * Change log:
+ * - Support dynamic configurations from kconfig
  */
 
 /* Author:
@@ -41,6 +45,7 @@
 /**************************************************************************/
 #include "system_types.h"
 #include "ruleid.h"
+#include "autoconf.h"
 
 struct ruleId_t;
 

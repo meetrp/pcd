@@ -78,7 +78,7 @@ typedef struct pcdApiMessage_t
     };
     ruleId_t    ruleId;
     Uint32      msgId;
-    Char        params[ PCD_MAX_PARAM_SIZE ];   /* Optional parameters */
+    Char        params[ CONFIG_PCD_MAX_PARAM_SIZE ];   /* Optional parameters */
 
 } pcdApiMessage_t;
 

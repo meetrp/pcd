@@ -1,0 +1,141 @@
+# Main Menu Title 
+mainmenu "PCD Configuration" 
+
+config DEFCONFIG_LIST
+		string
+		option defconfig_list
+		default ".config"
+		default "../config/pcd_defconfig"
+
+menu "PCD Configuration"
+
+menu "PCD Compile time configurations"
+
+# Setup PCD configurations 
+choice 
+		prompt "Target Platform type" 
+		default X86 
+
+config PCD_PLATFORM_ARM
+		bool "ARM" 
+		help 
+		Enable ARM support. Show detailed ARM register dump in case of a crash.
+
+config PCD_PLATFORM_X86
+		bool "X86" 
+		help 
+		Enable x86 (Intel) support. Show detailed x86 register dump in case of a crash.
+
+config PCD_PLATFORM_MIPS 
+		bool "MIPS" 
+		help 
+		Enable MIPS support. Show detailed MIPS register dump in case of a crash.
+
+config PCD_PLATFORM_OTHER
+		bool "Other platforms" 
+		help 
+		Generic support. Unsupported platform will not display detailed register dump in case of a crash
+
+endchoice 
+
+config PCD_CROSS_COMPILER_PREFIX 
+		string "Cross compiler prefix" 
+		help 
+Set cross compiler prefix (include full path if needed). Exampels for cross compilers are: arm-linux-uclibcabi- for ARM, or mips-linux- for MIPS.
+
+config PCD_EXTRA_CFLAGS
+		string "Extra CFLAGS" 
+		help 
+Specify extra CFLAGS (Compiler flags) that are required in order to compile PCD in your platform.
+
+config PCD_EXTRA_LDFLAGS
+		string "Extra LDFLAGS" 
+		help 
+Specify extra LDFLAGS (Linekr flags) that are required in order to compile PCD in your platform.
+
+config PCD_INSTALL_DIR_PREFIX 
+		string "PCD installation directory prefix" 
+		default "/home"
+		help 
+Set the directory prefix in which PCD needs to be installed.
+
+config PCD_USE_STATIC_LIBS
+		bool "Compile and link with static libraries"
+		default n
+		help 
+		Compile pcdapi and ipc libraries as static libraries. Enable only when your system does not support shared libraries.
+
+config PCD_DEBUG
+		bool "Enable debug mode"
+		default n
+		help 
+		Enable PCD debug mode which shows extra debug prints. Enable only for PCD debugging purposes.
+
+endmenu
+
+menu "PCD runtime configuration"
+
+config PCD_MAX_PARAM_SIZE 
+		int "Maximum size of the process parameters buffer" 
+		range 1 256 
+		default 256 
+		help 
+Set the maximum size of the buffer that holds the parameters of a process. This buffer holds the parameters which are either parsed from the rule, or passed by the start process API.
+
+config PCD_MAX_LOG_SIZE 
+		int "Maximum size of a log message" 
+		range 1 256 
+		default 256 
+		help 
+Set the maximum size of a log message.
+
+config PCD_PRIORITY 
+		int "PCD priority in the system" 
+		range 1 99
+		default 1 
+		help 
+Set the PCD priority in the system. The PCD runs as a high priority task in the FIFO scheduling scheme. Use this configuration option to define the PCD priority in the system.
+
+config PCD_TEMP_PATH 
+		string "Path for temporary files" 
+		default "/tmp" 
+		help 
+		Set the path for temporary files
+
+config PCD_PROCESS_SELF_EXCEPTION_DIRECTORY 
+		string "Path for PCD exception dump file" 
+		default "/var" 
+		help 
+		Set the path for PCD exception dump file, in case the PCD itself crashes.
+
+config PCD_PROCESS_SELF_EXCEPTION_FILE 
+		string "File name for PCD exception dump file" 
+		default "pcd_self_exception.txt" 
+		help 
+		Set the file name for PCD exception dump file, in case the PCD itself crashes.
+
+endmenu
+
+menu "IPC Configuration"
+
+config PCD_OWNER_ID 
+		int "PCD owner ID" 
+		default 3085 
+		help 
+		Define PCD owner ID
+
+config PCD_SERVER_NAME 
+		string "PCD server socket name" 
+		default "pcd-server" 
+		help 
+		PCD server socket name
+
+config PCD_CLIENTS_NAME_PREFIX 
+		string "PCD clients socket name prefix" 
+		default "pcd-client-" 
+		help 
+		Define PCD clients socket name prefix
+
+endmenu
+
+endmenu

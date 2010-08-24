@@ -157,7 +157,7 @@ static void PCD_dump_maps_file( pid_t pid )
     Char mapsFile[ 22 ];
     Int32 fd;
 
-    sprintf( mapsFile, "%s/%d.maps", PCD_TEMP_PATH, pid );
+    sprintf( mapsFile, "%s/%d.maps", CONFIG_PCD_TEMP_PATH, pid );
 
     /* Try to open the file */
     if ( stat(mapsFile, &fbuf) )
@@ -209,7 +209,7 @@ static void PCD_dump_fault_info( exception_t *exception )
 
     PCD_errlog_log( buffer, False );
 
-#ifdef CONFIG_ARM /* Print ARM registers */
+#ifdef CONFIG_PCD_PLATFORM_ARM /* Print ARM registers */
     i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nARM registers:\n\n"
                   "trap_no=0x%08lx\n"
                   "error_code=0x%08lx\n"
@@ -258,7 +258,7 @@ static void PCD_dump_fault_info( exception_t *exception )
         return;
 #endif
 
-#ifdef CONFIG_MIPS /* Print MIPS registers */
+#ifdef CONFIG_PCD_PLATFORM_MIPS /* Print MIPS registers */
     i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nMIPS registers:\n\n"
                   "regmask=0x%08x\n"
                   "status=0x%08x\n"
@@ -304,7 +304,7 @@ static void PCD_dump_fault_info( exception_t *exception )
         return;
 #endif
 
-#ifdef CONFIG_X86 /* Print X86 registers */
+#ifdef CONFIG_PCD_PLATFORM_X86 /* Print X86 registers */
     i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nX86 registers:\n\n"
                   "cr2=0x%08lx\n"
                   "oldmask=0x%08lx\n"
