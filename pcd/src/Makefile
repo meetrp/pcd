@@ -20,7 +20,7 @@
 
 -include $(PCD_ROOT)/.config
 
-CC ?= $(PCD_CROSS_COMPILER_PREFIX)gcc
+CC := $(CONFIG_PCD_CROSS_COMPILER_PREFIX)gcc
 CFLAGS += -MMD -O2 -Wall -fomit-frame-pointer -g $(PCD_EXTRA_CFLAGS)
 LDFLAGS += $(PCD_EXTRA_LDFLAGS)
 
