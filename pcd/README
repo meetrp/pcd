@@ -1,4 +1,4 @@
-PCD - Process Control Daemon application and library v0.0.5 - August 2010
+PCD - Process Control Daemon application and library v1.0.6 - October 2010
 
 -------------------------------------------------------------------------------
 
@@ -22,13 +22,15 @@ The PCD project supports Kconfig configuration, similarly to the Linux Kernel.
 The supported configuration commands are:
 - make defconfig - Configure default PCD settings.
 - make menuconfig - Configure the PCD settings in a textual menu.
-- make xconfig - Configure the PCD settings in a graphical menu (requires qt-devel library).
+- make xconfig - Configure the PCD settings in a graphical menu (requires qt3-devel library).
 - make oldconfig - Configure the PCD using existing settings in .config file.
 
 Don't forget to:
 - Select the correct platform (or other if it is not supported).
 - Setup your cross compiler.
 - Setup your target installation directory.
+
+Make sure that you have write permission to the destination directories!
 
 Compilation:
 Run "make all" or "make pcd" to compile everything.
@@ -41,12 +43,13 @@ directories for your reference.
 Command line parameters for the PCD (on the target):
 
 -f FILE, --file=FILE 	: Specify PCD rules file.
--p, --print		: Print parsed configuration.
--v, --verbose		: Verbose display.
+-p, --print				: Print parsed configuration.
+-v, --verbose			: Enable Verbose display (recommended).
 -t tick, --timer-tick=t : Setup timer ticks in ms (default 200ms).
 -e FILE, --errlog=FILE	: Specify error log file (in nvram)
 -d, --debug             : Debug mode
--h, --help 		: Print usage screen
+-V, --version			: Display PCD version
+-h, --help 				: Display usage screen
 
 The PCD application needs to run as soon as the system is up. Usually, you
 should start it from init.d/rcS file, in the background.
@@ -126,6 +129,16 @@ documentation for more details.
 
 Other applications can link with this library and request the PCD to start
 or stop other applications, according to the logic of the target.
+
+To use the PCD library, you need to include the pcdapi.h file in the pcd/include
+directory. This directory contains all required header files. This can be done
+by adding the folloing to your CFLAGS: 
+CFLAGS+=-I<PCD_HEADERS_DIR>
+
+Furthermore, you need to link your application with libpcd and libipc. This can
+be done by adding the following to your LDFLAGS:
+LDFLAGS+=-L<PCD_LIBS_INSTALLATION_DIR> -lpcd -lipc
+
 
 -------------------------------------------------------------------------------
 
