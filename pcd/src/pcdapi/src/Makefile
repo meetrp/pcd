@@ -22,8 +22,8 @@
 
 CC := $(CONFIG_PCD_CROSS_COMPILER_PREFIX)gcc
 AR := $(CONFIG_PCD_CROSS_COMPILER_PREFIX)ar
-CFLAGS += -MMD -O2 -Wall -fomit-frame-pointer -fPIC -g $(PCD_EXTRA_CFLAGS)
-LDFLAGS += -shared $(PCD_EXTRA_LDFLAGS)
+CFLAGS += -MMD -Wall -fomit-frame-pointer -fPIC -g
+LDFLAGS += -shared
 
 # includes
 CFLAGS += -I$(PCD_ROOT)/pcd/include -I$(PCD_ROOT)/pcd/src/pcdapi/include -I$(PCD_ROOT)/ipc/include
@@ -40,6 +40,7 @@ ifdef PCD_USE_STATIC_LIBS
 else
 	@$(CC) $(CFLAGS) $(obj-y) -o $@.so $(LDFLAGS) -Wl,-Map,$@.map
 endif
+	@install -p $(PCD_ROOT)/pcd/src/pcdapi/include/*.h $(PCD_ROOT)/include
 
 install: $(TARGET) install_internal
 ifdef CONFIG_PCD_INSTALL_DIR_PREFIX

@@ -36,10 +36,14 @@ $(TARGET): $(obj-y)
 
 install: $(TARGET)
 	install $(TARGET) $(PCD_BIN)/host
+ifneq ($(CONFIG_PCD_INSTALL_DIR_HOST),)
+	install $(TARGET) $(CONFIG_PCD_INSTALL_DIR_HOST)
+endif	
 
 clean:
 	@rm -f $(TARGET) $(obj-y) $(obj-y:.o=.d) $(TARGET).map
 	@rm -f $(PCD_ROOT)/bin/host/$(TARGET)
+	@rm -f $(CONFIG_PCD_INSTALL_DIR_HOST)/$(TARGET)
 
 %.o: %.c
 	@echo "  CC [C] 	$@"

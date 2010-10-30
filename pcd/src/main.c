@@ -18,6 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
  */
 
 /* Author:
@@ -101,13 +102,14 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
             {"timer-tick",  required_argument,  0, 't'},
             {"debug",       no_argument,        0, 'd'},
             {"errlog",      required_argument,  0, 'e'},
-            {0, 0, 0, 0}
+            {"version",     no_argument,        0, 'V'},
+			{0, 0, 0, 0}
         };
 
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long( argc, argv, "dpvhf:t:e:", long_options, &option_index );
+        c = getopt_long( argc, argv, "dpvVhf:t:e:", long_options, &option_index );
 
         /* Detect the end of the options. */
         if ( c == -1 )
@@ -154,7 +156,12 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
                 }
                 break;
 
-            case '?':
+            case 'V':
+				printf( "Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated\nCopyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd\n", PCD_VERSION );
+				exit(0);
+				break;
+			
+			case '?':
                 /* getopt_long already printed an error message. */
                 break;
 
@@ -283,7 +290,7 @@ int main( Int32 argc, Char *argv[] )
         exit(1);
     }
 
-    PCD_PRINTF_STDOUT( "Starting Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated", PCD_VERSION );
+    PCD_PRINTF_STDOUT( "Starting Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated\nCopyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd\n", PCD_VERSION );
 
     /* Init PCD subsystems */
     PCD_main_init();

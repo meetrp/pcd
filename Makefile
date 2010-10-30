@@ -29,6 +29,18 @@ MCONF := $(PCD_KCFG_DIR)/mconf
 CONF := $(PCD_KCFG_DIR)/conf
 
 export CFLAGS += -I$(PCD_CFG_DIR)
+
+# Optimization selection
+ifdef PCD_OPTIMIZE_FOR_SIZE
+CFLAGS += -Os
+else
+CFLAGS += -O2
+endif
+
+# Export user's flags
+CFLAGS += $(shell echo $(CONFIG_PCD_EXTRA_CFLAGS))
+LDFLAGS += $(shell echo $(CONFIG_PCD_EXTRA_LDFLAGS)) 
+
 export PCD_ROOT PCD_BIN
 
 -include $(PCD_ROOT)/.config
@@ -66,6 +78,7 @@ defconfig: pcd_title conf
     	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
 	fi
 	@echo PCD Configuration completed.
+	@echo Please make sure that you have write permissions to installation directories.
 
 oldconfig: pcd_title conf
 	@echo Configuring PCD...
@@ -77,6 +90,7 @@ oldconfig: pcd_title conf
     	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
 	fi
 	@echo PCD Configuration completed.
+	@echo Please make sure that you have write permissions to installation directories.
 
 xconfig: pcd_title conf
 	@echo Configuring PCD...
@@ -89,6 +103,7 @@ xconfig: pcd_title conf
     	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
 	fi
 	@echo PCD Configuration completed.
+	@echo Please make sure that you have write permissions to installation directories.
 
 menuconfig: pcd_title conf
 	@echo Configuring PCD...
@@ -100,7 +115,8 @@ menuconfig: pcd_title conf
 	@if [ -f $(PCD_ROOT)/autoconf.h ]; then \
     	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
 	fi
-	@echo PCD Configuration completed.
+	@echo PCD Configuration completed. 
+	@echo Please make sure that you have write permissions to installation directories.
 
 pcd: pcd_title
 	@if [ ! -f $(PCD_ROOT)/.config ]; then \
@@ -114,6 +130,7 @@ pcd: pcd_title
 	@$(MAKE) -C ./pcd/src/pcdapi/src
 	@$(MAKE) -C ./pcd/src
 	@$(MAKE) -C ./pcd/src/parser/src
+	@install -p $(PCD_ROOT)/scripts/configs/autoconf.h $(PCD_ROOT)/include
 
 install: pcd_title
 	@echo "Installing PCD..."
@@ -128,6 +145,7 @@ clean:
 	@$(MAKE) -C ./pcd/src/pcdapi/src clean -s
 	@$(MAKE) -C ./ipc/src clean -s
 	@$(MAKE) -C $(PCD_KCFG_DIR) clean -s
+	@rm -f $(PCD_ROOT)/include/*
 
 distclean: clean
 	@rm -f .config .config.old $(PCD_CFG_DIR)/autoconf.h $(PCD_CFG_DIR)/auto.conf

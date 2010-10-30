@@ -41,23 +41,29 @@ endchoice
 config PCD_CROSS_COMPILER_PREFIX 
 		string "Cross compiler prefix" 
 		help 
-Set cross compiler prefix (include full path if needed). Exampels for cross compilers are: arm-linux-uclibcabi- for ARM, or mips-linux- for MIPS.
+Set cross compiler prefix (include full path if needed). Exampels for cross compilers are: arm-linux-uclibceabi- for ARM, or mips-linux- for MIPS. No need to set cross compiler when compiling PCD to the native machine.
 
 config PCD_EXTRA_CFLAGS
 		string "Extra CFLAGS" 
 		help 
-Specify extra CFLAGS (Compiler flags) that are required in order to compile PCD in your platform.
+Specify extra CFLAGS (Compiler flags) that are required in order to compile PCD in your platform. Normally, the PCD doesn't require any flags to be set here.
 
 config PCD_EXTRA_LDFLAGS
 		string "Extra LDFLAGS" 
 		help 
-Specify extra LDFLAGS (Linekr flags) that are required in order to compile PCD in your platform.
+Specify extra LDFLAGS (Linekr flags) that are required in order to compile PCD in your platform. Normally, the PCD doesn't require any flags to be set here.
 
 config PCD_INSTALL_DIR_PREFIX 
-		string "PCD installation directory prefix" 
-		default "/home"
+		string "PCD target installation directory prefix" 
+		default "/home/`whoami`/fs"
 		help 
-Set the directory prefix in which PCD needs to be installed.
+Set the directory prefix for your target's filesystem. The PCD executable will be installed in <prefix>/usr/sbin and the libraries will be installed in <prefix>/lib. Make sure that you have write permission to this location!
+
+config PCD_INSTALL_DIR_HOST
+		string "PCD host installation directory" 
+		default "/usr/sbin"
+		help 
+Set the directory where to install the PCD executables for the host (currently, only pcdparser runs in the host machine). Make sure that you have write permission to this location!
 
 config PCD_USE_STATIC_LIBS
 		bool "Compile and link with static libraries"
@@ -70,6 +76,12 @@ config PCD_DEBUG
 		default n
 		help 
 		Enable PCD debug mode which shows extra debug prints. Enable only for PCD debugging purposes.
+
+config PCD_OPTIMIZE_FOR_SIZE
+		bool "Enable size optimization"
+		default n
+		help 
+		Compile PCD with size optimization. By default, the PCD is optimized for speed (-O2). If your not sure, use the default.
 
 endmenu
 

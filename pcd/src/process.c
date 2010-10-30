@@ -815,7 +815,10 @@ STATUS PCD_process_iterate_stop( void )
                         p->tm = 7;
                         PCD_PRINTF_STDOUT(  "Terminating process %s (%d) (Rule %s_%s)", rule->command, p->pid, rule->ruleId.groupName, rule->ruleId.ruleName );
                         p->signaled = True;
-                        kill(p->pid, SIGTERM);
+                        if( kill(p->pid, SIGTERM) < 0 )
+						{
+							p->state = PCD_PROCESS_STOPPED;
+						}
                     }
                     else
                     {

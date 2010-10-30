@@ -1,6 +1,6 @@
 #
 # Automatically generated make config: don't edit
-# Sat Oct 30 16:56:39 2010
+# Sat Oct 30 17:00:11 2010
 #
 CONFIG_DEFCONFIG_LIST=".config"
 
@@ -11,11 +11,11 @@ CONFIG_DEFCONFIG_LIST=".config"
 #
 # PCD Compile time configurations
 #
-# CONFIG_PCD_PLATFORM_ARM is not set
+CONFIG_PCD_PLATFORM_ARM=y
 # CONFIG_PCD_PLATFORM_X86 is not set
-CONFIG_PCD_PLATFORM_MIPS=y
+# CONFIG_PCD_PLATFORM_MIPS is not set
 # CONFIG_PCD_PLATFORM_OTHER is not set
-CONFIG_PCD_CROSS_COMPILER_PREFIX="mips-linux-"
+CONFIG_PCD_CROSS_COMPILER_PREFIX="arm-linux-gnueabi-"
 CONFIG_PCD_EXTRA_CFLAGS=""
 CONFIG_PCD_EXTRA_LDFLAGS=""
 CONFIG_PCD_INSTALL_DIR_PREFIX="/home/`whoami`/fs"

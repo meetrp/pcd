@@ -1,6 +1,6 @@
 #
 # Automatically generated make config: don't edit
-# Tue Aug 24 14:51:52 2010
+# Sat Oct 30 16:57:14 2010
 #
 CONFIG_DEFCONFIG_LIST=".config"
 
@@ -19,8 +19,10 @@ CONFIG_PCD_CROSS_COMPILER_PREFIX="armeb-linux-uclibceabi-"
 CONFIG_PCD_EXTRA_CFLAGS=""
 CONFIG_PCD_EXTRA_LDFLAGS=""
 CONFIG_PCD_INSTALL_DIR_PREFIX="/home/`whoami`/fs"
+CONFIG_PCD_INSTALL_DIR_HOST="/usr/sbin"
 # CONFIG_PCD_USE_STATIC_LIBS is not set
 # CONFIG_PCD_DEBUG is not set
+# CONFIG_PCD_OPTIMIZE_FOR_SIZE is not set
 
 #
 # PCD runtime configuration

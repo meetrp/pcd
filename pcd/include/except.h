@@ -98,7 +98,7 @@ typedef struct exception_t
 } exception_t;
 
 
-#define PCD_EXCEPTION_FILE  "/var/pcd_except"
+#define PCD_EXCEPTION_FILE  CONFIG_PCD_TEMP_PATH"/pcd_except"
 
 /**************************************************************************/
 /*      INTERFACE FUNCTIONS Prototypes:                                   */

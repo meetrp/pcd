@@ -21,8 +21,7 @@
 -include $(PCD_ROOT)/.config
 
 CC := $(CONFIG_PCD_CROSS_COMPILER_PREFIX)gcc
-CFLAGS += -MMD -O2 -Wall -fomit-frame-pointer -g $(PCD_EXTRA_CFLAGS)
-LDFLAGS += $(PCD_EXTRA_LDFLAGS)
+CFLAGS += -MMD -Wall -fomit-frame-pointer -g
 
 # includes
 CFLAGS += -I$(PCD_ROOT)/pcd/include -I$(PCD_ROOT)/pcd/src/pcdapi/include -I$(PCD_ROOT)/ipc/include
@@ -38,6 +37,7 @@ all: $(TARGET) install
 $(TARGET): $(obj-y)
 	@echo "  LINK	 	$@"
 	@$(CC) $(CFLAGS) $(obj-y) -o $@ $(LDFLAGS) -Wl,-Map,$@.map
+	@install -p $(PCD_ROOT)/pcd/include/pcd.h $(PCD_ROOT)/pcd/include/ruleid.h $(PCD_ROOT)/include
 
 install: $(TARGET) install_internal
 ifdef CONFIG_PCD_INSTALL_DIR_PREFIX

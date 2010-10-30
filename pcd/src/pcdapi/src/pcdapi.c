@@ -375,8 +375,8 @@ STATUS PCD_api_register_exception_handlers( Char *name, Cleanup_func cleanup )
     memset( procName, 0, PCD_EXCEPTION_MAX_PROCESS_NAME );
     strncpy( procName, name, PCD_EXCEPTION_MAX_PROCESS_NAME - 1 );
 
-    sprintf( mapsFile, "/proc/%d/maps", pid );
-    sprintf( mapsTmpFile, "/var/tmp/%d.maps", pid );
+    strcpy( mapsFile, "/proc/self/maps" );
+    sprintf( mapsTmpFile, "%s/%d.maps", CONFIG_PCD_TEMP_PATH, pid );
 
     SETSIG(sa, SIGINT,  PCD_exception_default_handler);
     SETSIG(sa, SIGSEGV, PCD_exception_default_handler);
