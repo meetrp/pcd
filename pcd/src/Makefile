@@ -52,6 +52,7 @@ install_internal:
 clean:
 	@rm -f $(TARGET) $(obj-y) $(obj-y:.o=.d) $(TARGET).map
 	@rm -f $(PCD_BIN)/target/usr/sbin/$(TARGET)
+	@rm -f $(CONFIG_PCD_INSTALL_DIR_PREFIX)/usr/sbin/$(TARGET)
 
 %.o: %.c
 	@echo "  CC [C] 	$@"

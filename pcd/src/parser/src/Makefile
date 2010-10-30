@@ -18,6 +18,8 @@
 # 
 #  Makefile for pcdparser application
 
+-include $(PCD_ROOT)/.config
+
 CC = gcc
 CFLAGS += -MMD -O2 -Wall -fomit-frame-pointer -DPCD_HOST_BUILD
 LDFLAGS =
@@ -35,9 +37,9 @@ $(TARGET): $(obj-y)
 	@$(CC) $(CFLAGS) $(obj-y) -o $@ $(LDFLAGS) -Wl,-Map,$@.map
 
 install: $(TARGET)
-	install $(TARGET) $(PCD_BIN)/host
+	@install $(TARGET) $(PCD_BIN)/host
 ifneq ($(CONFIG_PCD_INSTALL_DIR_HOST),)
-	install $(TARGET) $(CONFIG_PCD_INSTALL_DIR_HOST)
+	@install $(TARGET) $(CONFIG_PCD_INSTALL_DIR_HOST)
 endif	
 
 clean:

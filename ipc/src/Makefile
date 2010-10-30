@@ -63,6 +63,7 @@ endif
 clean:
 	@rm -f $(TARGET).so $(TARGET).a $(obj-y) $(obj-y:.o=.d) $(TARGET).map
 	@rm -f $(PCD_BIN)/target/lib/$(TARGET).*
+	@rm -f $(CONFIG_PCD_INSTALL_DIR_PREFIX)/lib/$(TARGET).*
 
 %.o: %.c
 	@echo "  CC [C] 	$@"
