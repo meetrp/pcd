@@ -65,6 +65,12 @@ config PCD_INSTALL_DIR_HOST
 		help 
 Set the directory where to install the PCD executables for the host (currently, only pcdparser runs in the host machine). Make sure that you have write permission to this location!
 
+config PCD_INSTALL_HEADERS_DIR_PREFIX 
+		string "PCD header files installation directory prefix" 
+		default "/usr/include"
+		help 
+Set the directory prefix for the PCD header files, which may be used by your applications. The PCD header files contain all the data types and API the PCD exposes. Make sure that you have write permission to this location!
+
 config PCD_USE_STATIC_LIBS
 		bool "Compile and link with static libraries"
 		default n

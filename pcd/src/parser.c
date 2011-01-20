@@ -667,7 +667,7 @@ static Int32 PCD_parser_handle_START_COND( Char *line )
             strncpy( rule.startCondition.filename, token2, PCD_COND_MAX_SIZE );
             break;
         case PCD_START_COND_KEYWORD_NETDEVICE:
-            strncpy( rule.startCondition.netDevice, token2, PCD_COND_MAX_SIZE );
+            strncpy( rule.startCondition.netDevice, token2, IFNAMSIZ );
             break;
         case PCD_START_COND_KEYWORD_IPC_OWNER:
             rule.startCondition.ipcOwner = atoi( token2 );

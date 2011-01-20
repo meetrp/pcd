@@ -540,7 +540,7 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
         Int32 readBytes = 0;
 
         /* Create a temporary file which will be available after the process is dead */
-        fd2 = open( mapsTmpFile, O_CREAT | O_WRONLY | O_SYNC );
+        fd2 = open( mapsTmpFile, O_CREAT | O_WRONLY | O_SYNC, S_IRWXU | S_IRWXG );
 
         if ( fd2 > 0 )
         {
@@ -548,7 +548,8 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
             while ( ( readBytes = read( fd1, buf, sizeof(buf) ) ) > 0 )
             {
                 /* Best effort write */
-                write( fd2, buf, readBytes );
+                if( write( fd2, buf, readBytes ) <= 0 )
+					break;
             }
 
             close(fd2);

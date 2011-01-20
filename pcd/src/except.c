@@ -269,8 +269,8 @@ static void PCD_dump_fault_info( exception_t *exception )
                   "status=0x%08x\n"
                   "pc=0x%08llx\n"
                   "fpregs.fp_r.fp_dregs=0x%08f\n"
-                  "fpregs.fp_r.fp_fregs[NFPREG]._fp_fregs=0x%08f\n"
-                  "fpregs.fp_r.fp_fregs[NFPREG]._fp_pad=0x%08x\n"
+                  "fpregs.fp_r.fp_fregs[NFPREG-1]._fp_fregs=0x%08f\n"
+                  "fpregs.fp_r.fp_fregs[NFPREG-1]._fp_pad=0x%08x\n"
                   "fp_owned=0x%08x\n"
                   "fpc_csr=0x%08x\n"
                   "fpc_eir=0x%08x\n"
@@ -287,9 +287,9 @@ static void PCD_dump_fault_info( exception_t *exception )
                   exception->uc_mctx.regmask,
                   exception->uc_mctx.status,
                   exception->uc_mctx.pc,
-                  exception->uc_mctx.fpregs.fp_r.fp_dregs[NFPREG],
-                  exception->uc_mctx.fpregs.fp_r.fp_fregs[NFPREG]._fp_fregs,
-                  exception->uc_mctx.fpregs.fp_r.fp_fregs[NFPREG]._fp_pad,
+                  exception->uc_mctx.fpregs.fp_r.fp_dregs[NFPREG-1],
+                  exception->uc_mctx.fpregs.fp_r.fp_fregs[NFPREG-1]._fp_fregs,
+                  exception->uc_mctx.fpregs.fp_r.fp_fregs[NFPREG-1]._fp_pad,
                   exception->uc_mctx.fp_owned,
                   exception->uc_mctx.fpc_csr,
                   exception->uc_mctx.fpc_eir,

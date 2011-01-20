@@ -1,4 +1,4 @@
-PCD - Process Control Daemon application and library v1.0.6 - October 2010
+PCD - Process Control Daemon application and library v1.0.7 - January 2011
 
 -------------------------------------------------------------------------------
 
@@ -177,6 +177,14 @@ Documentation is available in the PCD's homepage in the Real-Time Embedded
 website: http://www.rt-embedded.com/pcd
 
 The design document is available in the PCD project homepage at SourceForge:
+http://sourceforge.net/projects/pcd
+
+-------------------------------------------------------------------------------
+
+SUPPORT
+
+Support is available in the support forum of the PCD project homepage at 
+SourceForge:
 http://sourceforge.net/projects/pcd
 
 -------------------------------------------------------------------------------

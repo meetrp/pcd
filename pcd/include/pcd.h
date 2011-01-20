@@ -45,7 +45,7 @@
 /**************************************************************************/
 #include "system_types.h"
 #include "errlog.h"
-#include "autoconf.h"
+#include "pcd_autoconf.h"
 
 /**************************************************************************/
 /*      INTERFACE TYPES and STRUCT Definitions                            */
@@ -56,7 +56,7 @@ extern Bool debugMode;
 /*! \def PCD_VERSION
  *  \brief PCD Version
  */
-#define PCD_VERSION									"1.0.6"
+#define PCD_VERSION									"1.0.7"
 
 /*! \def PCD_PRINT_PREFIX
  *  \brief Holds the prefix for printouts
@@ -66,19 +66,19 @@ extern Bool debugMode;
 /*! \def PCD_PRINTF_STDOUT
  *  \brief Print a message to standard output
  */
-#define PCD_PRINTF_STDOUT( format, args... )        if( verboseOutput ) fprintf( stdout, PCD_PRINT_PREFIX format ".\n", ## args )
+#define PCD_PRINTF_STDOUT( _format, _args... )        if( verboseOutput ) fprintf( stdout, PCD_PRINT_PREFIX _format ".\n", ## _args )
 
 /*! \def PCD_PRINTF_WARNING_STDOUT
  *  \brief Print a warning message to standard output
  */
-#define PCD_PRINTF_WARNING_STDOUT( format, args... )        if( verboseOutput ) fprintf( stdout, PCD_PRINT_PREFIX "Warning: " format ".\n", ## args )
+#define PCD_PRINTF_WARNING_STDOUT( _format, _args... )        if( verboseOutput ) fprintf( stdout, PCD_PRINT_PREFIX "Warning: " _format ".\n", ## _args )
 
 /*! \def PCD_PRINTF_STDERR
  *  \brief Print a message to standard error
  */
-#define PCD_PRINTF_STDERR( format, args... )        \
+#define PCD_PRINTF_STDERR( _format, _args... )        \
 {   Char tmpLogBuffer[ CONFIG_PCD_MAX_LOG_SIZE ]; \
-    sprintf( tmpLogBuffer, PCD_PRINT_PREFIX "Error: " format ".\n", ## args ); \
+    sprintf( tmpLogBuffer, PCD_PRINT_PREFIX "Error: " _format ".\n", ## _args ); \
     if( verboseOutput ) fprintf( stderr, tmpLogBuffer ); \
     PCD_errlog_log( tmpLogBuffer, True ); \
 }

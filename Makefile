@@ -75,7 +75,8 @@ defconfig: pcd_title conf
 	@cp $(PCD_DEF_CFG_FILE) $(PCD_ROOT)/.config
 	@$(CONF) -s $(PCD_CONFIG_IN)
 	@if [ -f $(PCD_ROOT)/autoconf.h ]; then \
-    	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
+    	mv auto.conf $(PCD_CFG_DIR) ;\
+		mv autoconf.h $(PCD_CFG_DIR)/pcd_autoconf.h ;\
 	fi
 	@echo PCD Configuration completed.
 	@echo Please make sure that you have write permissions to installation directories.
@@ -87,7 +88,8 @@ oldconfig: pcd_title conf
 	fi
 	@$(CONF) -s $(PCD_CONFIG_IN)
 	@if [ -f $(PCD_ROOT)/autoconf.h ]; then \
-    	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
+    	mv auto.conf $(PCD_CFG_DIR) ;\
+		mv autoconf.h $(PCD_CFG_DIR)/pcd_autoconf.h ;\
 	fi
 	@echo PCD Configuration completed.
 	@echo Please make sure that you have write permissions to installation directories.
@@ -100,7 +102,8 @@ xconfig: pcd_title conf
 	@$(QCONF) $(PCD_CONFIG_IN) $(PCD_ROOT)/.config
 	@$(CONF) -s $(PCD_CONFIG_IN)
 	@if [ -f $(PCD_ROOT)/autoconf.h ]; then \
-    	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
+    	mv auto.conf $(PCD_CFG_DIR) ;\
+		mv autoconf.h $(PCD_CFG_DIR)/pcd_autoconf.h ;\
 	fi
 	@echo PCD Configuration completed.
 	@echo Please make sure that you have write permissions to installation directories.
@@ -113,31 +116,43 @@ menuconfig: pcd_title conf
 	@$(MCONF) $(PCD_CONFIG_IN) $(PCD_ROOT)/.config
 	@$(CONF) -s $(PCD_CONFIG_IN)
 	@if [ -f $(PCD_ROOT)/autoconf.h ]; then \
-    	mv autoconf.h auto.conf $(PCD_CFG_DIR) ;\
+    	mv auto.conf $(PCD_CFG_DIR) ;\
+		mv autoconf.h $(PCD_CFG_DIR)/pcd_autoconf.h ;\
 	fi
 	@echo PCD Configuration completed. 
 	@echo Please make sure that you have write permissions to installation directories.
 
-pcd: pcd_title
+check_permissions:
+	@echo Checking write permission: $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)
+	@touch $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)/pcd.tmp
+	@echo Checking write permission: $(CONFIG_PCD_INSTALL_DIR_HOST)
+	@touch $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp
+	@echo Checking write permission: $(CONFIG_PCD_INSTALL_DIR_PREFIX)
+	@touch $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp
+
+check_config:
 	@if [ ! -f $(PCD_ROOT)/.config ]; then \
 	  echo "PCD Configuration not found." ;\
 	  echo "Please run one of the configuration commands (run make help for details)." ;\
 	  exit 1;\
 	fi
 
+pcd: pcd_title check_config check_permissions
 	@echo "Building PCD..."
 	@$(MAKE) -C ./ipc/src
 	@$(MAKE) -C ./pcd/src/pcdapi/src
 	@$(MAKE) -C ./pcd/src
 	@$(MAKE) -C ./pcd/src/parser/src
-	@install -p $(PCD_ROOT)/scripts/configs/autoconf.h $(PCD_ROOT)/include
+	@install -p $(PCD_ROOT)/scripts/configs/pcd_autoconf.h $(PCD_ROOT)/include
+	@echo PCD build completed. 
 
-install: pcd_title
+install: pcd_title check_permissions
 	@echo "Installing PCD..."
 	@$(MAKE) -C ./ipc/src install
 	@$(MAKE) -C ./pcd/src/pcdapi/src install
 	@$(MAKE) -C ./pcd/src install	
 	@$(MAKE) -C ./pcd/src/parser/src install
+	@install -p $(PCD_ROOT)/include/*.h $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)
 
 clean:
 	@$(MAKE) -C ./pcd/src clean -s
@@ -148,5 +163,7 @@ clean:
 	@rm -f $(PCD_ROOT)/include/*
 
 distclean: clean
-	@rm -f .config .config.old $(PCD_CFG_DIR)/autoconf.h $(PCD_CFG_DIR)/auto.conf
-	@rm -f $(PCD_KCFG_DIR)/.config $(PCD_KCFG_DIR)/.config.old $(PCD_KCFG_DIR)/autoconf.h $(PCD_KCFG_DIR)/auto.conf
+	@rm -f .config .config.old $(PCD_CFG_DIR)/pcd_autoconf.h $(PCD_CFG_DIR)/auto.conf
+	@rm -f $(PCD_KCFG_DIR)/.config $(PCD_KCFG_DIR)/.config.old $(PCD_KCFG_DIR)/pcd_autoconf.h $(PCD_KCFG_DIR)/auto.conf
+
+.PHONY: all install check_permissions check_config clean distclean help conf pcd_title menuconfig xconfig defconfig oldconfig

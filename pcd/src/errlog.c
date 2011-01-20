@@ -78,7 +78,7 @@ static STATUS PCD_errlog_open_file( void )
     off_t off;
 
     /* Open it */
-    if ( ( fd = open( logFilename, O_WRONLY | O_NONBLOCK | O_APPEND | O_CREAT | O_SYNC ) ) < 0 )
+    if ( ( fd = open( logFilename, O_WRONLY | O_NONBLOCK | O_APPEND | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG ) ) < 0 )
     {
         PCD_DEBUG_PRINTF( "Open log file failed: %s", logFilename );
         return STATUS_NOK;
@@ -100,7 +100,7 @@ static STATUS PCD_errlog_open_file( void )
         ssize_t bytes;
 
         close(fd);
-        if ( ( fd = open( logFilename, O_RDWR | O_NONBLOCK | O_CREAT | O_SYNC ) ) < 0 )
+        if ( ( fd = open( logFilename, O_RDWR | O_NONBLOCK | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG ) ) < 0 )
         {
             PCD_DEBUG_PRINTF( "Open log file failed: %s", logFilename );
             return STATUS_NOK;
@@ -118,27 +118,34 @@ static STATUS PCD_errlog_open_file( void )
 
         if ( bytes > 0 )
         {
-            /* Truncate the file */
-            ftruncate( fd, PCD_ERRLOG_MIN_FREE_SIZE );
+            /* Truncate the file, erase it if fails */
+            if( ftruncate( fd, PCD_ERRLOG_MIN_FREE_SIZE ) < 0 )
+			{
+				close(fd);		
+				unlink( logFilename );				
+			}
+			else
+			{
+				if ( ( off = lseek( fd, 0, SEEK_SET ) ) < 0 )
+				{
+					PCD_DEBUG_PRINTF( "lseek 2 log file failed: %s", logFilename );
+					return STATUS_NOK;
+				}
 
-            if ( ( off = lseek( fd, 0, SEEK_SET ) ) < 0 )
-            {
-                PCD_DEBUG_PRINTF( "lseek 2 log file failed: %s", logFilename );
-                return STATUS_NOK;
-            }
+				/* Write the data in the start of the file */
+				bytes = write( fd, tempBuffer, bytes );
 
-            /* Write the data in the start of the file */
-            bytes = write( fd, tempBuffer, bytes );
-
-            close(fd);
+				close(fd);
+			}
         }
         else
         {
-            /* In case we failed to read the file due to flash corruption, remove it */
+			/* In case we failed to read the file due to flash corruption, remove it */            
+			close(fd);		
             unlink( logFilename );
         }
 
-        if ( ( fd = open( logFilename, O_WRONLY | O_NONBLOCK | O_APPEND | O_CREAT | O_SYNC ) ) < 0 )
+        if ( ( fd = open( logFilename, O_WRONLY | O_NONBLOCK | O_APPEND | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG ) ) < 0 )
         {
             PCD_DEBUG_PRINTF( "Open log file failed: %s", logFilename );
             return STATUS_NOK;
@@ -201,17 +208,20 @@ void PCD_errlog_log( Char *buffer, Bool timeStamp )
             Uint32 len = strlen( timeBuf );
 
             timeBuf[ len - 1 ] = ' ';
-            write( fd, timeBuf, len );
+            if( write( fd, timeBuf, len ) <= 0 )
+				goto close_file;
         }
 
         /* Ignore the "pcd: " prefix */
-        buffer+=5;
+        buffer += strlen( PCD_PRINT_PREFIX );
     }
 
-    /* Add the error log */
-    write( fd, buffer, strlen( buffer ) );
+    /* Add the error log, check return value to avoid warnings */
+    if( write( fd, buffer, strlen( buffer ) ) <= 0 )
+		goto close_file;
 
-    /* Close file (we want to avoid FFS corruption) */
+close_file:
+	/* Close file (we want to avoid FFS corruption) */
     PCD_errlog_close_file();
 }
 

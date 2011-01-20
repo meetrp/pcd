@@ -45,7 +45,7 @@
 /**************************************************************************/
 #include "system_types.h"
 #include "ruleid.h"
-#include "autoconf.h"
+#include "pcd_autoconf.h"
 
 struct ruleId_t;
 
