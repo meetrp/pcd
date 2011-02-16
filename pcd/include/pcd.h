@@ -56,7 +56,7 @@ extern Bool debugMode;
 /*! \def PCD_VERSION
  *  \brief PCD Version
  */
-#define PCD_VERSION									"1.0.8"
+#define PCD_VERSION									"1.0.9"
 
 /*! \def PCD_PRINT_PREFIX
  *  \brief Holds the prefix for printouts

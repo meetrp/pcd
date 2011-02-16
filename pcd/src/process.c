@@ -300,6 +300,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
         while ( ( token != NULL ) && ( i < PCD_PROCESS_MAX_PARAMS ) )
         {
             Char *ptr;
+            Char *p_var = NULL;
 
             /* Check if we have an environment variable in the parameters list */
             ptr = strchr( token, '$' );
@@ -309,13 +310,30 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
                 Char *env = NULL;
                 Char *var;
                 Char buff[ CONFIG_PCD_MAX_PARAM_SIZE ];
+                Char var_name[ 64 ];
+
+                if( ( *(ptr + 1) ) == '{' )
+                {
+                	p_var = strchr( ptr + 2, '}' );
+
+                	if( p_var )
+                	{
+                    	Uint32 val = p_var - ( ptr + 2 );
+
+                		memset( var_name, 0, sizeof( var_name ) );
+                    	if( val >= sizeof( var_name ) )
+                			goto parse_param_next;
+
+                		memcpy( var_name, ptr + 2, val );
+                	}
+                }
 
                 /* Get the variable value from CONFIG_PCD_TEMP_PATH */
                 {
                     Int32 fd;
                     Char filename[ 255 ];
 
-                    sprintf( filename, CONFIG_PCD_TEMP_PATH "/%s", ptr + 1 );
+                    sprintf( filename, CONFIG_PCD_TEMP_PATH "/%s", var_name );
 
                     fd =  open( filename, O_RDONLY );
                     if ( fd > 0 )
@@ -334,7 +352,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
                 if ( !env )
                 {
                     /* Perhaps it is in the environment ? */
-                    env = getenv( ptr + 1 );
+                    env = getenv( var_name );
 
                     if ( !env )
                     {
@@ -376,7 +394,12 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
 
                     if ( !var )
                     {
-                        /* No more arguments in the buffer */
+                    	/* No more arguments in the buffer, look for other strings in the buffer */
+                    	if( p_var )
+                        {
+                        	strncat( env, p_var + 1, CONFIG_PCD_MAX_PARAM_SIZE-varsIdx-1 );
+                        	varsIdx += strlen( p_var + 1 );
+                        }
                         break;
                     }
 
@@ -392,8 +415,14 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
                     {
                         if ( !(*env) )
                         {
-                            /* No more arguments in the buffer */
-                            break;
+                            /* No more arguments in the buffer, look for other strings in the buffer */
+                            if( p_var )
+                            {
+                            	strncat( args[ i ], p_var + 1, CONFIG_PCD_MAX_PARAM_SIZE-varsIdx-1 );
+                            	varsIdx += strlen( p_var + 1 );
+                            }
+
+                        	break;
                         }
                     }
 

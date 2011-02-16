@@ -1,4 +1,4 @@
-PCD - Process Control Daemon application and library v1.0.8 - January 2011
+PCD - Process Control Daemon application and library v1.0.9 - February 2011
 
 -------------------------------------------------------------------------------
 
@@ -194,6 +194,7 @@ AUTHOR
 This library and application was originally designed and written by Hai Shalom.
 The code was written for Texas Instruments and exported to open source. Now it
 is managed and maintained by Hai Shalom as part of the PCD Project group.
+
 
 If you have any questions, comments or remarks, or want to join the PCD Project
 group, please contact me:

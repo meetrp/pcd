@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
- * Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
+ * Copyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd
  */
 
 /* Author:
@@ -157,7 +157,7 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
                 break;
 
             case 'V':
-				printf( "Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated\nCopyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd\n", PCD_VERSION );
+				printf( "Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated\nCopyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd", PCD_VERSION );
 				exit(0);
 				break;
 			
@@ -290,7 +290,7 @@ int main( Int32 argc, Char *argv[] )
         exit(1);
     }
 
-    PCD_PRINTF_STDOUT( "Starting Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated\nCopyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd\n", PCD_VERSION );
+    printf( "Starting Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated\nCopyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd\n", PCD_VERSION );
 
     /* Init PCD subsystems */
     PCD_main_init();
