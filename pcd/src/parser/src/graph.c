@@ -41,29 +41,29 @@
 #include "condchk.h"
 #include "graph.h"
 
-static Bool graphNoStartCondCreated;
+static bool_t graphNoStartCondCreated;
 static pcdGraph_e graphDisplay = PCD_MAIN_GRAPH_ACTIVE_ONLY;
 
-/*! \fn STATUS PCD_graph_set_display_items
+/*! \fn PCD_status_e PCD_graph_set_display_items
  *  \brief Setup display items
  *  \param[in] graphDisplayItems.
  *  \param[out] None.
  *  \return OK or error status.
  */
-STATUS PCD_graph_set_display_items( pcdGraph_e graphDisplayItems )
+PCD_status_e PCD_graph_set_display_items( pcdGraph_e graphDisplayItems )
 {
     graphDisplay = graphDisplayItems;
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-/*! \fn STATUS PCD_graph_create_file
+/*! \fn PCD_status_e PCD_graph_create_file
  *  \brief open graph file
  *  \param[in] graphFilename, graphDisplay.
  *  \param[out] graphHandle.
  *  \return OK or error status.
  */
-STATUS PCD_graph_create_file( const Char *graphFilename, void **graphHandle )
+PCD_status_e PCD_graph_create_file( const char *graphFilename, void **graphHandle )
 {
     FILE *myGraphHandle;
 
@@ -72,7 +72,7 @@ STATUS PCD_graph_create_file( const Char *graphFilename, void **graphHandle )
 
     if ( !myGraphHandle )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Init variables */
@@ -83,22 +83,22 @@ STATUS PCD_graph_create_file( const Char *graphFilename, void **graphHandle )
     /* Write the header */
     fprintf( myGraphHandle, "digraph G {\n\n" );
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-/*! \fn STATUS PCD_graph_close_file
+/*! \fn PCD_status_e PCD_graph_close_file
  *  \brief close graph file
  *  \param[in] graphFilename, graphHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_graph_close_file( const Char *graphFilename, const void *graphHandle )
+PCD_status_e PCD_graph_close_file( const char *graphFilename, const void *graphHandle )
 {
     FILE *myGraphHandle;
 
     if ( !graphHandle )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     myGraphHandle = (FILE *)graphHandle;
@@ -108,26 +108,26 @@ STATUS PCD_graph_close_file( const Char *graphFilename, const void *graphHandle 
     if ( fclose(myGraphHandle) < 0 )
     {
         PCD_PRINTF_STDERR( "Failed to close graph file %s", graphFilename );
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     PCD_PRINTF_STDOUT( "Generated graph file %s", graphFilename );
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-/*! \fn STATUS PCD_graph_update_file
+/*! \fn PCD_status_e PCD_graph_update_file
  *  \brief Add a new item in graph
  *  \param[in] rule, graphHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_graph_update_file( const rule_t *newrule, const void *graphHandle )
+PCD_status_e PCD_graph_update_file( const rule_t *newrule, const void *graphHandle )
 {
     FILE *myGraphHandle;
 
     if ( !graphHandle )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     myGraphHandle = (FILE *)graphHandle;
@@ -139,7 +139,7 @@ STATUS PCD_graph_update_file( const rule_t *newrule, const void *graphHandle )
            (( graphDisplay == PCD_MAIN_GRAPH_INACTIVE_ONLY ) || ( graphDisplay == PCD_MAIN_GRAPH_FULL_DISPLAY )) )
        )
     {
-        Char *shape;
+        char *shape;
 
         if ( strcmp( newrule->command, "NONE" ) == 0 )
         {
@@ -155,7 +155,7 @@ STATUS PCD_graph_update_file( const rule_t *newrule, const void *graphHandle )
 
         if ( newrule->startCondition.type == PCD_START_COND_KEYWORD_RULE_COMPLETED )
         {
-            Uint32 i = 0;
+            u_int32_t i = 0;
 
             while ( i < PCD_START_COND_MAX_IDS )
             {
@@ -180,8 +180,8 @@ STATUS PCD_graph_update_file( const rule_t *newrule, const void *graphHandle )
         }
         else
         {
-            Char *typeStr = NULL;
-            Char condStr[ 32 ];
+            char *typeStr = NULL;
+            char condStr[ 32 ];
 
             switch ( newrule->startCondition.type )
             {
@@ -216,6 +216,6 @@ STATUS PCD_graph_update_file( const rule_t *newrule, const void *graphHandle )
         }
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 

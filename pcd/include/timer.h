@@ -54,7 +54,7 @@
  */
 #define PCD_TIMER_TICK_DEFAULT       200
 
-extern Uint32 PCD_TIMER_TICK;       /* PCD Timer tick in ms */
+extern u_int32_t PCD_TIMER_TICK;       /* PCD Timer tick in ms */
 
 /*! \struct timerObj_t
  *  \brief Timer object structure
@@ -65,7 +65,7 @@ typedef struct timerObj_t
     condCheckFunc       startCondCheckFunc;
     condCheckFunc       endCondCheckFunc;
     failActionFunc      failureActionFunc;
-    Uint32              timeout;
+    u_int32_t              timeout;
 
     struct timerObj_t   *prev;
     struct timerObj_t   *next;
@@ -80,9 +80,9 @@ typedef struct timerObj_t
  *  \brief          Module's init function
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_timer_init( void );
+PCD_status_e PCD_timer_init( void );
 
 /*! \fn             PCD_timer_iterate
  *  \brief          Timer iteration function
@@ -90,38 +90,38 @@ STATUS PCD_timer_init( void );
  *  \param[in,out]  None
  *  \return         True - Process spawn required, False - No process spawn now
  */
-Bool PCD_timer_iterate( void );
+bool_t PCD_timer_iterate( void );
 
 /*! \fn             PCD_timer_start
  *  \brief          Start the timer
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_timer_start( void );
+PCD_status_e PCD_timer_start( void );
 
 /*! \fn             PCD_timer_stop
  *  \brief          Stop the timer
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_timer_stop( void );
+PCD_status_e PCD_timer_stop( void );
 
 /*! \fn             PCD_timer_enqueue_rule
  *  \brief          Enqueue a rule from the timer list
  *  \param[in]      Rule
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_timer_enqueue_rule( rule_t *rule );
+PCD_status_e PCD_timer_enqueue_rule( rule_t *rule );
 
 /*! \fn             PCD_timer_dequeue_rule
  *  \brief          Dequeue a rule from the timer list
  *  \param[in]      Rule, failed flag
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_timer_dequeue_rule( rule_t *rule, Bool failed );
+PCD_status_e PCD_timer_dequeue_rule( rule_t *rule, bool_t failed );
 
 #endif /* _TIMER_H_ */

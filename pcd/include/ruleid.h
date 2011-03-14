@@ -60,8 +60,8 @@
  */
 typedef struct ruleId_t
 {
-    Char        groupName[ PCD_RULEID_MAX_GROUP_NAME_SIZE ];
-    Char        ruleName[ PCD_RULEID_MAX_RULE_NAME_SIZE ];
+    char        groupName[ PCD_RULEID_MAX_GROUP_NAME_SIZE ];
+    char        ruleName[ PCD_RULEID_MAX_RULE_NAME_SIZE ];
 
 } ruleId_t;
 

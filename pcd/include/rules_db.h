@@ -63,15 +63,15 @@ typedef struct rule_t
     ruleId_t            ruleId;
     startCond_t         startCondition;
     endCond_t           endCondition;
-    Uint32              timeout;
-    Char                *command;
-    Char                *params;
-    Char                *optionalParams;
+    u_int32_t              timeout;
+    char                *command;
+    char                *params;
+    char                *optionalParams;
     failureAction_t     failureAction;
     schedType_t         sched;
-    Bool                daemon;
+    bool_t                daemon;
     pcdRuleState_e      ruleState;
-    Bool                indexed;
+    bool_t                indexed;
 
     struct procObj_t    *proc;
 
@@ -84,7 +84,7 @@ typedef struct rule_t
  */
 typedef struct ruleGroup_t
 {
-    Char                *groupName;
+    char                *groupName;
     rule_t              *firstRule;
     struct ruleGroup_t  *next;
 
@@ -98,9 +98,9 @@ typedef struct ruleGroup_t
  *  \brief          Add a rule to the database
  *  \param[in]      Rule
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_rulesdb_add_rule( rule_t *rule );
+PCD_status_e PCD_rulesdb_add_rule( rule_t *rule );
 
 /*! \fn             PCD_rulesdb_get_rule_by_id
  *  \brief          Get rule by rule ID
@@ -116,7 +116,7 @@ rule_t *PCD_rulesdb_get_rule_by_id( ruleId_t *ruleId );
  *  \param[in,out]  None
  *  \return         Pointer to Rule - Success, NULL - Error
  */
-rule_t *PCD_rulesdb_get_rule_by_pid( Int32 pid );
+rule_t *PCD_rulesdb_get_rule_by_pid( int32_t pid );
 
 /*! \fn             PCD_rulesdb_get_first
  *  \brief          Get the first rule in DB. Sequent calls to next.
@@ -138,24 +138,24 @@ rule_t *PCD_rulesdb_get_next( void );
  *  \brief          Enqueue all active rules to timer
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_rulesdb_activate( void );
+PCD_status_e PCD_rulesdb_activate( void );
 
 /*! \fn             PCD_rulesdb_setup_optional_params
  *  \brief          Setup optional parameters in rule
  *  \param[in]      Rule, Optional parameters
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_rulesdb_setup_optional_params( rule_t *rule, const Char *optionalParams );
+PCD_status_e PCD_rulesdb_setup_optional_params( rule_t *rule, const char *optionalParams );
 
 /*! \fn             PCD_rulesdb_clear_optional_params
  *  \brief          Clear optional parameters from rule
  *  \param[in]      Rule
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_rulesdb_clear_optional_params( rule_t *rule );
+PCD_status_e PCD_rulesdb_clear_optional_params( rule_t *rule );
 
 #endif /* _RULES_DB_H_ */

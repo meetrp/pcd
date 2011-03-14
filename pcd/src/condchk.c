@@ -93,34 +93,34 @@ condCheckFunc PCD_end_cond_check_get_function( endCond_e cond )
 }
 
 
-STATUS PCD_start_cond_check_NONE( rule_t *rule )
+PCD_status_e PCD_start_cond_check_NONE( rule_t *rule )
 {
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_start_cond_check_FILE( rule_t *rule )
+PCD_status_e PCD_start_cond_check_FILE( rule_t *rule )
 {
     struct stat fbuf;
 
     /* Try to open the file */
     if ( stat(rule->startCondition.filename, &fbuf) )
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_start_cond_check_PNAME( rule_t *rule )
+PCD_status_e PCD_start_cond_check_PNAME( rule_t *rule )
 {
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_start_cond_check_RULE_COMPLETED( rule_t *rule )
+PCD_status_e PCD_start_cond_check_RULE_COMPLETED( rule_t *rule )
 {
     rule_t *checkRule;
-    Uint32 i = 0;
+    u_int32_t i = 0;
 
     while ( i < PCD_START_COND_MAX_IDS )
     {
@@ -145,13 +145,13 @@ STATUS PCD_start_cond_check_RULE_COMPLETED( rule_t *rule )
 
             /* There is no way to complete this rule */
             rule->ruleState = PCD_RULE_NOT_COMPLETED;
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
 
         /* Check status. If one of the rules is not completed, there is no point of checking the rest */
         if ( checkRule->ruleState != PCD_RULE_COMPLETED )
         {
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
 
         /* Advance to next rule */
@@ -161,38 +161,38 @@ STATUS PCD_start_cond_check_RULE_COMPLETED( rule_t *rule )
     /* All specified rules have completed */
     if ( i > 0 )
     {
-        return STATUS_OK;
+        return PCD_STATUS_OK;
     }
 
-    return STATUS_NOK;
+    return PCD_STATUS_NOK;
 }
 
 
-STATUS PCD_start_cond_check_NETDEVICE( rule_t *rule )
+PCD_status_e PCD_start_cond_check_NETDEVICE( rule_t *rule )
 {
-    Int32 sock;
+    int32_t sock;
     struct ifreq ifr;
-    STATUS ret = STATUS_NOK;
+    PCD_status_e ret = PCD_STATUS_NOK;
 
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     ifr.ifr_addr.sa_family = AF_INET;
 
     if ( sock < 0 )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
-    strncpy(ifr.ifr_name, rule->startCondition.netDevice, IFNAMSIZ);
+    strncpy(ifr.ifr_name, rule->startCondition.netDevice, IF_NAMESIZE);
     ifr.ifr_hwaddr.sa_family = 1;
 
     /* Get interface mac address */
     if ( ioctl(sock, SIOCGIFHWADDR, &ifr) < 0 )
     {
-        ret = STATUS_NOK;
+        ret = PCD_STATUS_NOK;
     }
     else
     {
-        ret = STATUS_OK;
+        ret = PCD_STATUS_OK;
     }
 
     close(sock);
@@ -201,7 +201,7 @@ STATUS PCD_start_cond_check_NETDEVICE( rule_t *rule )
 }
 
 
-STATUS PCD_start_cond_check_IPC_OWNER( rule_t *rule )
+PCD_status_e PCD_start_cond_check_IPC_OWNER( rule_t *rule )
 {
     IPC_context_t destContext;
 
@@ -209,39 +209,39 @@ STATUS PCD_start_cond_check_IPC_OWNER( rule_t *rule )
 }
 
 
-STATUS PCD_start_cond_check_ENV_VAR( rule_t *rule )
+PCD_status_e PCD_start_cond_check_ENV_VAR( rule_t *rule )
 {
-    Char *sp;
+    char *sp;
 
     if ( ( sp = getenv(rule->startCondition.envVar.envVarName ) ) )
     {
         if ( strcmp(rule->startCondition.envVar.envVarValue, sp ) == 0 )
-            return STATUS_OK;
+            return PCD_STATUS_OK;
     }
 
-    return STATUS_NOK;
+    return PCD_STATUS_NOK;
 }
 
 
-STATUS PCD_end_cond_check_NONE( rule_t *rule )
+PCD_status_e PCD_end_cond_check_NONE( rule_t *rule )
 {
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_end_cond_check_FILE( rule_t *rule )
+PCD_status_e PCD_end_cond_check_FILE( rule_t *rule )
 {
     struct stat fbuf;
 
     /* Try to open the file */
     if ( stat(rule->endCondition.filename, &fbuf) )
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_end_cond_check_EXIT( rule_t *rule )
+PCD_status_e PCD_end_cond_check_EXIT( rule_t *rule )
 {
     if ( rule->proc )
     {
@@ -249,38 +249,38 @@ STATUS PCD_end_cond_check_EXIT( rule_t *rule )
         {
             /* Process has exited */
             if ( rule->proc->retcode == rule->endCondition.exitStatus )
-                return STATUS_OK;
+                return PCD_STATUS_OK;
         }
     }
 
-    return STATUS_NOK;
+    return PCD_STATUS_NOK;
 }
 
-STATUS PCD_end_cond_check_NETDEVICE( rule_t *rule )
+PCD_status_e PCD_end_cond_check_NETDEVICE( rule_t *rule )
 {
-    Int32 sock;
+    int32_t sock;
     struct ifreq ifr;
-    STATUS ret = STATUS_NOK;
+    PCD_status_e ret = PCD_STATUS_NOK;
 
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     ifr.ifr_addr.sa_family = AF_INET;
 
     if ( sock < 0 )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
-    strncpy(ifr.ifr_name, rule->endCondition.netDevice, IFNAMSIZ);
+    strncpy(ifr.ifr_name, rule->endCondition.netDevice, IF_NAMESIZE);
     ifr.ifr_hwaddr.sa_family = 1;
 
     /* Get interface mac address */
     if ( ioctl(sock, SIOCGIFHWADDR, &ifr) < 0 )
     {
-        ret = STATUS_NOK;
+        ret = PCD_STATUS_NOK;
     }
     else
     {
-        ret = STATUS_OK;
+        ret = PCD_STATUS_OK;
     }
 
     close(sock);
@@ -289,7 +289,7 @@ STATUS PCD_end_cond_check_NETDEVICE( rule_t *rule )
 }
 
 
-STATUS PCD_end_cond_check_IPC_OWNER( rule_t *rule )
+PCD_status_e PCD_end_cond_check_IPC_OWNER( rule_t *rule )
 {
     IPC_context_t destContext;
 
@@ -298,30 +298,30 @@ STATUS PCD_end_cond_check_IPC_OWNER( rule_t *rule )
 }
 
 
-STATUS PCD_end_cond_check_PROCESS_READY( rule_t *rule )
+PCD_status_e PCD_end_cond_check_PROCESS_READY( rule_t *rule )
 {
     /* Check processReady flag, which is set by PCD API */
     if ( rule->endCondition.processReady == True )
     {
         /* Clear the flag for next time */
         rule->endCondition.processReady = False;
-        return STATUS_OK;
+        return PCD_STATUS_OK;
     }
 
-    return STATUS_NOK;
+    return PCD_STATUS_NOK;
 }
 
 
-STATUS PCD_end_cond_check_WAIT( rule_t *rule )
+PCD_status_e PCD_end_cond_check_WAIT( rule_t *rule )
 {
-    Uint32 *delay = &rule->endCondition.delay[0];
+    u_int32_t *delay = &rule->endCondition.delay[0];
 
     /* Reduce time tick and check if time has expired */
     if ( *delay < PCD_TIMER_TICK )
     {
         /* Restore the delay value and return OK, time has expired */
         *delay = rule->endCondition.delay[1];
-        return STATUS_OK;
+        return PCD_STATUS_OK;
     }
     else
     {
@@ -329,5 +329,5 @@ STATUS PCD_end_cond_check_WAIT( rule_t *rule )
         *delay -= PCD_TIMER_TICK;
     }
 
-    return STATUS_NOK;
+    return PCD_STATUS_NOK;
 }

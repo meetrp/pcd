@@ -59,20 +59,21 @@
 /* PCD Process tick: 1500ms */
 #define PCD_PROCESS_TICK  ( 1500 )
 
-static Char *rulesFilename = NULL;
+static char *rulesFilename = NULL;
+static bool_t crashDaemonMode = False;
 
-static void PCD_main_usage( Char *execname );
-Bool verboseOutput = False;
-Bool debugMode = False;
+static void PCD_main_usage( char *execname );
+bool_t verboseOutput = False;
+bool_t debugMode = False;
 
 /* PCD Timer tick in ms */
-Uint32 PCD_TIMER_TICK = PCD_TIMER_TICK_DEFAULT;
+u_int32_t PCD_TIMER_TICK = PCD_TIMER_TICK_DEFAULT;
 
 /**************************************************************************/
 /*      IMPLEMENTATION                                                    */
 /**************************************************************************/
 
-static void PCD_main_usage( Char *execname )
+static void PCD_main_usage( char *execname )
 {
     printf( "Usage: %s [options]\nOptions:\n\n", execname );
     printf( "-f FILE, --file=FILE\t\tSpecify PCD rules file.\n" );
@@ -80,11 +81,12 @@ static void PCD_main_usage( Char *execname )
     printf( "-v, --verbose\t\t\tVerbose display.\n" );
     printf( "-t tick, --timer-tick=tick\tSetup timer ticks in ms (default 200ms).\n" );
     printf( "-e FILE, --errlog=FILE\t\tSpecify error log file (in nvram).\n" );
+    printf( "-c, --crashd\t\t\tEnable crash-daemon only mode (no rules file).\n" );
     printf( "-h, --help\t\t\tPrint this message and exit.\n" );
     exit(0);
 }
 
-void PCD_main_parse_params( Int32 argc, Char *argv[] )
+void PCD_main_parse_params( int32_t argc, char *argv[] )
 {
     int c;
 
@@ -102,6 +104,7 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
             {"timer-tick",  required_argument,  0, 't'},
             {"debug",       no_argument,        0, 'd'},
             {"errlog",      required_argument,  0, 'e'},
+            {"crashd",      no_argument,        0, 'c'},		
             {"version",     no_argument,        0, 'V'},
 			{0, 0, 0, 0}
         };
@@ -109,7 +112,7 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long( argc, argv, "dpvVhf:t:e:", long_options, &option_index );
+        c = getopt_long( argc, argv, "dpvVhcf:t:e:", long_options, &option_index );
 
         /* Detect the end of the options. */
         if ( c == -1 )
@@ -125,6 +128,17 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
                 debugMode = True;
                 break;
 
+            case 'c':
+			    if( rulesFilename )
+				{
+				    PCD_PRINTF_WARNING_STDOUT( "Rule file already specified, crash daemon mode is disabled" );	
+				}
+				else
+				{
+                    crashDaemonMode = True;
+				}
+                break;
+
             case 'p':
                 PCD_parser_enable_verbose( True );
                 break;
@@ -134,6 +148,12 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
                 break;
 
             case 'f':
+			    if( crashDaemonMode )
+				{
+                    verboseOutput = True;			    
+					PCD_PRINTF_STDERR( "Rules are disabled in crash daemon mode (either specify a rule file or enable crash daemon mode)" );	
+					exit(1);
+				}
                 rulesFilename = optarg;
                 break;
 
@@ -171,13 +191,13 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
     }
 }
 
-void PCD_main_set_self_priority( Int32 priority, Int32 policy )
+void PCD_main_set_self_priority( int32_t priority, int32_t policy )
 {
     struct sched_param setParam;
 
     if ( sched_getparam( 0, &setParam ) == 0 )
     {
-        setParam.sched_priority = (Int32)priority;
+        setParam.sched_priority = (int32_t)priority;
         sched_setscheduler( 0, policy, &setParam );
     }
 }
@@ -187,43 +207,43 @@ void PCD_main_init( void )
     /* Initialize the whole PCD subsystems. Exit abnormally in case something fails to init. */
 
     /* Initialize the timer module */
-    if ( PCD_timer_init() != STATUS_OK )
+    if ( PCD_timer_init() != PCD_STATUS_OK )
     {
         exit(1);
     }
 
     /* Initialize process module */
-    if ( PCD_process_init() != STATUS_OK )
+    if ( PCD_process_init() != PCD_STATUS_OK )
     {
         exit(1);
     }
 
     /* Parse the configuration file, and initialize rules database */
-    if ( PCD_parser_parse( rulesFilename ) != STATUS_OK )
+    if ( !crashDaemonMode && PCD_parser_parse( rulesFilename ) != PCD_STATUS_OK )
     {
         exit(1);
     }
 
     /* Initialize the API module */
-    if ( PCD_api_init() != STATUS_OK )
+    if ( PCD_api_init() != PCD_STATUS_OK )
     {
         exit(1);
     }
 
     /* Activate all rules in database */
-    if ( PCD_rulesdb_activate() != STATUS_OK )
+    if ( PCD_rulesdb_activate() != PCD_STATUS_OK )
     {
         exit(1);
     }
 
     /* Start the timer tick */
-    if ( PCD_timer_start() != STATUS_OK )
+    if ( PCD_timer_start() != PCD_STATUS_OK )
     {
         exit(1);
     }
 
     /* Initialize exception handler */
-    if ( PCD_exception_init() != STATUS_OK )
+    if ( PCD_exception_init() != PCD_STATUS_OK )
     {
         exit(1);
     }
@@ -233,8 +253,8 @@ void PCD_main_init( void )
 
 void PCD_main_loop( void )
 {
-    Uint32 pcdTimerTick;
-    Uint32 tickCounter = PCD_PROCESS_TICK; /* Init tickCounter to perform an iteration */
+    u_int32_t pcdTimerTick;
+    u_int32_t tickCounter = PCD_PROCESS_TICK; /* Init tickCounter to perform an iteration */
 
     /* Setup PCD tick */
     pcdTimerTick = PCD_TIMER_TICK * 1000; /* Convert to uSeconds */
@@ -268,7 +288,7 @@ void PCD_main_loop( void )
     }
 }
 
-int main( Int32 argc, Char *argv[] )
+int main( int32_t argc, char *argv[] )
 {
     /* Setup FIFO_SCHED level 1. Boost the priority immediately */
     PCD_main_set_self_priority( CONFIG_PCD_PRIORITY, SCHED_FIFO );
@@ -280,10 +300,17 @@ int main( Int32 argc, Char *argv[] )
         exit( 1 );
     }
 
+    if( daemon( 1, 1 ) < 0 )
+    {
+        verboseOutput = True;
+        PCD_PRINTF_STDERR( "Failed to daemonize" );
+        exit( 1 );       
+    }
+
     /* Parse the command line parameters */
     PCD_main_parse_params( argc, argv );
 
-    if ( !rulesFilename )
+    if ( !rulesFilename && !crashDaemonMode )
     {
         verboseOutput = True;
         PCD_PRINTF_STDERR( "Please specify rules filename" );

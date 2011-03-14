@@ -62,37 +62,37 @@ typedef enum
 /*      INTERFACE FUNCTIONS Prototypes:                                   */
 /**************************************************************************/
 
-/*! \fn STATUS PCD_graph_set_display_items
+/*! \fn PCD_status_e PCD_graph_set_display_items
  *  \brief Setup display items
  *  \param[in] graphDisplayItems.
  *  \param[out] None.
  *  \return OK or error status.
  */
-STATUS PCD_graph_set_display_items( pcdGraph_e graphDisplayItems );
+PCD_status_e PCD_graph_set_display_items( pcdGraph_e graphDisplayItems );
 
-/*! \fn STATUS PCD_graph_create_file
+/*! \fn PCD_status_e PCD_graph_create_file
  *  \brief open graph file
  *  \param[in] graphFilename, graphDisplay.
  *  \param[out] graphHandle.
  *  \return OK or error status.
  */
-STATUS PCD_graph_create_file( const Char *graphFilename, void **graphHandle );
+PCD_status_e PCD_graph_create_file( const char *graphFilename, void **graphHandle );
 
-/*! \fn STATUS PCD_graph_close_file
+/*! \fn PCD_status_e PCD_graph_close_file
  *  \brief close graph file
  *  \param[in] graphFilename, graphHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_graph_close_file( const Char *graphFilename, const void *graphHandle );
+PCD_status_e PCD_graph_close_file( const char *graphFilename, const void *graphHandle );
 
-/*! \fn STATUS PCD_graph_update_file
+/*! \fn PCD_status_e PCD_graph_update_file
  *  \brief Add a new item in graph
  *  \param[in] rule, graphHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_graph_update_file( const rule_t *newrule, const void *graphHandle );
+PCD_status_e PCD_graph_update_file( const rule_t *newrule, const void *graphHandle );
 
 #endif /* _GRAPH_H_ */
 

@@ -53,10 +53,10 @@
 /*      LOCAL DEFINITIONS AND VARIABLES                                   */
 /**************************************************************************/
 
-extern Int32 errno;
+extern int32_t errno;
 
 static timerObj_t *timerObjHead = NULL;
-static Bool timerEnabled = False;
+static bool_t timerEnabled = False;
 
 typedef struct timerQueueList
 {
@@ -83,8 +83,8 @@ static void PCD_timer_dequeue_handle( void );
 static void PCD_timer_enqueue_handle( void );
 
 /* Handle conditions */
-static Bool PCD_timer_handle_start_condition( timerObj_t *timerObj );
-static Bool PCD_timer_handle_end_condition( timerObj_t *timerObj );
+static bool_t PCD_timer_handle_start_condition( timerObj_t *timerObj );
+static bool_t PCD_timer_handle_end_condition( timerObj_t *timerObj );
 
 #define PCD_START_COND_KEYWORD( keyword ) \
     &PCD_START_COND_FUNCTION( keyword ),
@@ -110,21 +110,21 @@ condCheckFunc endCondFuncs[] =
 
 #undef PCD_END_COND_KEYWORD
 
-extern Int32 errno;
+extern int32_t errno;
 
 /**************************************************************************/
 /*      IMPLEMENTATION                                                    */
 /**************************************************************************/
 
-STATUS PCD_timer_init( void )
+PCD_status_e PCD_timer_init( void )
 {
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-Bool PCD_timer_iterate( void )
+bool_t PCD_timer_iterate( void )
 {
     timerObj_t *searchList;
-    Bool processFlag = False;
+    bool_t processFlag = False;
 
     /* Check if we have something to do */
     if ( ( timerEnabled == False ) || ( !timerObjHead ) )
@@ -162,17 +162,17 @@ Bool PCD_timer_iterate( void )
     return processFlag;
 }
 
-STATUS PCD_timer_start( void )
+PCD_status_e PCD_timer_start( void )
 {
     timerEnabled = True;
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_timer_stop( void )
+PCD_status_e PCD_timer_stop( void )
 {
     timerEnabled = False;
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 static void PCD_timer_dequeue( timerObj_t *timerObj )
@@ -245,38 +245,38 @@ static void PCD_timer_enqueue( timerObj_t *newObj )
     newObj->prev = timerObj;
 }
 
-STATUS PCD_timer_enqueue_rule( rule_t *rule )
+PCD_status_e PCD_timer_enqueue_rule( rule_t *rule )
 {
     timerObj_t *newObj;
 
     if ( !rule )
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
 
     if ( ( PCD_RULE_ACTIVE( rule ) ) || ( rule->proc ) )
     {
-        return -STATUS_ERROR_PERMISSION_DENIED;
+        return PCD_STATUS_INVALID_RULE;
     }
 
     newObj = PCD_timer_new( rule );
 
     if ( !newObj )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Enqueue the new rule in the timer queue */
     rule->ruleState = PCD_RULE_START_CONDITION_WAITING;
     PCD_timer_enqueue( newObj );
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_timer_dequeue_rule( rule_t *rule, Bool failed )
+PCD_status_e PCD_timer_dequeue_rule( rule_t *rule, bool_t failed )
 {
     timerObj_t *searchList;
 
     if ( !rule )
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
 
     searchList = timerObjHead;
 
@@ -309,14 +309,14 @@ STATUS PCD_timer_dequeue_rule( rule_t *rule, Bool failed )
                 }
             }
 
-            return STATUS_OK;
+            return PCD_STATUS_OK;
         }
 
         searchList = searchList->next;
     }
 
 
-    return -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS;
+    return PCD_STATUS_INVALID_RULE;
 }
 
 static void PCD_timer_dequeue_handle( void )
@@ -421,10 +421,10 @@ static void PCD_timer_add_to_enqueue_list( rule_t *rule )
     enqueueList = newObj;
 }
 
-static Bool PCD_timer_handle_start_condition( timerObj_t *timerObj )
+static bool_t PCD_timer_handle_start_condition( timerObj_t *timerObj )
 {
     rule_t *rule = timerObj->rule;
-    STATUS retval;
+    PCD_status_e retval;
     PCD_DEBUG_PRINTF( "Rule %s_%s: Waiting for start condition", rule->ruleId.groupName, rule->ruleId.ruleName );
 
     if ( timerObj->startCondCheckFunc )
@@ -435,11 +435,11 @@ static Bool PCD_timer_handle_start_condition( timerObj_t *timerObj )
     else
     {
         /* In case there is no start condition function (should not happen) */
-        retval = STATUS_OK;
+        retval = PCD_STATUS_OK;
     }
 
     /* Condition ok, spawn the process */
-    if ( retval == STATUS_OK )
+    if ( retval == PCD_STATUS_OK )
     {
         /* Check if this is a pseudo (sync) rule, which does not require any process */
         if ( strcmp( rule->command, "NONE" ) == 0 )
@@ -452,7 +452,7 @@ static Bool PCD_timer_handle_start_condition( timerObj_t *timerObj )
         }
 
         /* Check if process was enqueued */
-        if ( ( retval = PCD_process_enqueue( rule ) ) == STATUS_OK )
+        if ( ( retval = PCD_process_enqueue( rule ) ) == PCD_STATUS_OK )
         {
             /* Update rule state */
             rule->ruleState = PCD_RULE_END_CONDITION_WAITING;
@@ -461,7 +461,7 @@ static Bool PCD_timer_handle_start_condition( timerObj_t *timerObj )
         else
         {
             /* Ok, we have a problem... */
-            if ( retval == -STATUS_ERROR_OPERATION_NOT_PERMITTED )
+            if ( retval == PCD_STATUS_INVALID_RULE )
             {
                 /* In this case, we already have a running process (how could this be??)
                  Lets kill it and try again in the next iteration */
@@ -492,10 +492,10 @@ static Bool PCD_timer_handle_start_condition( timerObj_t *timerObj )
     return False;
 }
 
-static Bool PCD_timer_handle_end_condition( timerObj_t *timerObj )
+static bool_t PCD_timer_handle_end_condition( timerObj_t *timerObj )
 {
     rule_t *rule = timerObj->rule;
-    STATUS retval;
+    PCD_status_e retval;
 
     PCD_DEBUG_PRINTF( "Rule %s_%s: Waiting for end condition", rule->ruleId.groupName, rule->ruleId.ruleName );
 
@@ -507,11 +507,11 @@ static Bool PCD_timer_handle_end_condition( timerObj_t *timerObj )
     else
     {
         /* In case there is no end condition function (should not happen) */
-        retval = STATUS_OK;
+        retval = PCD_STATUS_OK;
     }
 
     /* Condition ok, remove from queue */
-    if ( retval == STATUS_OK )
+    if ( retval == PCD_STATUS_OK )
     {
         if ( rule->proc )
         {

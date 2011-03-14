@@ -79,18 +79,32 @@
     General functions:
     1. IPC_cleanup_proc -> A general function to cleanup resources of a context. Can be used by a process monitor.
     2. IPC_general_func -> A general purpose function. Not used currently.
+ 
+ * Copyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd
+ * 
+ * Change log:
+ * - Use standard system types
+ */
 
-*/
+/* IPC Status enum
+ * 
+ */
+typedef enum
+{
+	IPC_STATUS_OK = 0,
+	IPC_STATUS_NOK = -1
+	
+} IPC_status_e;
 
 /*! \IPC_message_t
  *  \brief IPC message structure
  */
 typedef struct
 {
-    Uint32  magic;
-    Uint32  size;
-    Int32   context;
-    Uint8   data[0];
+    u_int32_t  magic;
+    u_int32_t  size;
+    int32_t   context;
+    u_int8_t   data[0];
 
 } IPC_message_t;
 
@@ -108,30 +122,30 @@ enum { IPC_NO_OWNER = ~0U };
  */
 #define IPC_PRINTF_ERROR_STDERR( format, args... )		fprintf( stderr, "ipc: Error: " format ".\n", ## args )
 
-typedef Uint32 IPC_context_t;
+typedef u_int32_t IPC_context_t;
 
 /*!\fn IPC_init
  * \brief Initialize the IPC module. To be used in case it requires general init.
  * \param[in] 		flags: Special handling flags
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_init( Uint32 flags );
+IPC_status_e IPC_init( u_int32_t flags );
 
 /*!\fn IPC_start
  * \brief Start a communication channel.
  * \param[in] 		myName: Context socket identifier
  * \param[in] 		flags: Special handling flags
  * \param[out]      myContext: Context handle, to be used with the IPC API
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags );
+IPC_status_e IPC_start( char *myName, IPC_context_t *myContext, u_int32_t flags );
 
 /*!\fn IPC_stop
  * \brief Stop a communication channel, free all the resources.
  * \param[in] 		myContext: Context handle
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_stop( IPC_context_t myContext );
+IPC_status_e IPC_stop( IPC_context_t myContext );
 
 /*!\fn IPC_alloc_msg
  * \brief Allocate memory for a message
@@ -139,7 +153,7 @@ STATUS IPC_stop( IPC_context_t myContext );
  * \param[in] 	    size: Buffer size
  * \return			Pointer to an IPC message - Success, NULL - Error
  */
-IPC_message_t *IPC_alloc_msg( IPC_context_t myContext, Uint32 size );
+IPC_message_t *IPC_alloc_msg( IPC_context_t myContext, u_int32_t size );
 
 /*!\fn IPC_get_msg
  * \brief Get a pointer to the data in the message body. Required in case the IPC module encapsulates infromation in the message body.
@@ -151,40 +165,40 @@ void *IPC_get_msg( IPC_message_t *msg );
 /*!\fn IPC_free_msg
  * \brief Free message memory.
  * \param[in] 		msg: Pointer to an IPC message
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_free_msg( IPC_message_t *msg );
+IPC_status_e IPC_free_msg( IPC_message_t *msg );
 
 /*!\fn IPC_send_msg
  * \brief Send a message to a destination. Use either the destination's context or name.
  * \param[in] 		destContext: Destination context (message target)
  * \param[in] 		msg: Pointer to an IPC message
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_send_msg( IPC_context_t destContext, IPC_message_t *msg );
+IPC_status_e IPC_send_msg( IPC_context_t destContext, IPC_message_t *msg );
 
 /*!\fn IPC_wait_msg
  * \brief Wait a specific amount of time for an incoming message.
  * \param[in] 		myContext: Context handle
  * \param[in] 	    msgBuffer: Address of a pointer to an IPC message. Upon message reception, this pointer will be populated.
  * \param[in] 		timeout: Define the maximum time to wait in ms, or using IPC_timeout_e
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, IPC_timeout_e timeout );
+IPC_status_e IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, IPC_timeout_e timeout );
 
 /*!\fn IPC_reply_msg
  * \brief Reply to an incoming message. Incoming message needs to be freed after replying.
  * \param[in]       incomingMsg: The IPC message which we want to reply to.
  * \param[in] 	    replyMsg: The IPC reply message
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_reply_msg( IPC_message_t *incomingMsg, IPC_message_t *replyMsg );
+IPC_status_e IPC_reply_msg( IPC_message_t *incomingMsg, IPC_message_t *replyMsg );
 
 /*!\fn IPC_get_msg_owner
  * \brief Get a pointer to the data in the message body. Required in case the IPC module encapsulates infromation in the message body.
  * \param[in]
  * \param[in,out]
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
 void *IPC_get_msg( IPC_message_t *msg );
 
@@ -192,41 +206,41 @@ void *IPC_get_msg( IPC_message_t *msg );
  * \brief Get the owner index of the message
  * \param[in] 		msg: Pointer to an IPC message
  * \param[out] 	    msgContext: The message context
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_get_msg_context( IPC_message_t *msg, IPC_context_t *msgContext );
+IPC_status_e IPC_get_msg_context( IPC_message_t *msg, IPC_context_t *msgContext );
 
 /*!\fn IPC_cleanup_proc
  * \brief Cleanup IPC resources of a specific process (optional).
  * \param[in]       pid: Process ID
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_cleanup_proc( pid_t pid );
+IPC_status_e IPC_cleanup_proc( pid_t pid );
 
 /*!\fn IPC_set_owner
  * \brief Set ownership (index value) on an IPC resource (optional).
  * \param[in] 		myContext: Context handle
  * \param[in] 	    owner: Owner's ID, a constant value which *always* represents this context
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_set_owner( IPC_context_t myContext, Uint32 owner );
+IPC_status_e IPC_set_owner( IPC_context_t myContext, u_int32_t owner );
 
 /*!\fn IPC_get_context_by_owner
  * \brief Get an index value of an IPC resource (optional).
  * \param[in] 		owner: Owner's ID, a constant value which *always* represents this context
  * \param[out] 	    destContext: Destination context which is identified as the owner
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_get_context_by_owner( IPC_context_t *destContext, Uint32 owner );
+IPC_status_e IPC_get_context_by_owner( IPC_context_t *destContext, u_int32_t owner );
 
 /*!\fn IPC_general_func
  * \brief Optional general function for any extension required.
  * \param[in]       value: Some value
  * \param[in]       dataSize: Used to determine the data size
  * \param[in,out] 	data: Some data
- * \return			STATUS_OK - Success, <0 - Error
+ * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_general_func( Uint32 value, void *data, Uint32 dataSize );
+IPC_status_e IPC_general_func( u_int32_t value, void *data, u_int32_t dataSize );
 
 #endif /*__IPC_H__*/
 

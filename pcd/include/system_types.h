@@ -34,77 +34,38 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Copyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd
+ * 
+ * Change log:
+ * - Use standard system types
  */
 
 #ifndef _SYSTEM_TYPES_H_
 #define _SYSTEM_TYPES_H_
 
-#ifndef _SYS_PTYPES_H_
-#define _SYS_PTYPES_H_
+#include <sys/types.h>
 
-/* Bool - Boolean Type */
-typedef enum { False = 0, True = 1 } Bool;
+#if !defined( False ) && !defined( True )
+#define False 	(0)
+#define True 	(!False)
+#endif
 
-/* Character */
-typedef char            Char;
-
-/* Signed integer definitions */
-typedef long long       Int64;
-typedef int             Int32;
-typedef short           Int16;
-typedef signed char     Int8;
-
-/* Unsigned integer definitions */
-typedef unsigned long long  Uint64;
-typedef unsigned int        Uint32;
-typedef unsigned short      Uint16;
-typedef unsigned char       Uint8;
+#ifndef bool_t
+/* Boolean system type */
+typedef u_int32_t bool_t;
 
 #endif
 
-#ifndef _STATUS_H_
-#define _STATUS_H_
-
+/* PCD return status */
 typedef enum
 {
-    STATUS_OK = 0,      /* success */
-    STATUS_NOK = -1,     /* error   */
-
-    STATUS_INTERNAL_ERROR = 0x100,
-    STATUS_SOCKET_ERROR,
-    STATUS_LIBRARY_ERROR,
-    STATUS_PROTOCOL_ERROR,
-    STATUS_FILE_ERROR,
-
-    STATUS_ERROR = 0x200,
-    STATUS_ERROR_ABORT,
-	STATUS_ERROR_FILE_EXCEEDS_MAX_SIZE,
-    STATUS_ERROR_INVALID_ENTRY,
-    STATUS_ERROR_MISSING_OPTION,
-    STATUS_ERROR_OUT_OF_MEMORY,
-    STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS,
-    STATUS_ERROR_OPERATION_NOT_PERMITTED,
-    STATUS_ERROR_PERMISSION_DENIED,
-    STATUS_ERROR_INVALID_ARGUMENT,
-    STATUS_ERROR_RESOURCE_BUSY,
-    STATUS_ERROR_NOT_SUPPORTED,
-    STATUS_ERROR_OVERFLOW,
-    STATUS_ERROR_DESTINATION_UNREACHABLE,
-    STATUS_ERROR_FILE_NOT_FOUND,
-    STATUS_ERROR_NO_ANSWER,
-	STATUS_ERROR_DATA_ERROR,
-
-    STATUS_BAD_PARAMS = 0x300,
-    STATUS_BAD_OPTION_FORMAT,
-    STATUS_BAD_SERVER,
-    STATUS_BAD_FLOW,
-
-	STATUS_PASS_WITH_WARNINGS = 0x400,
-	STATUS_PASS_INCOMPLETE,
-
-} STATUS;
-
-#endif
+	PCD_STATUS_OK = 0,
+	PCD_STATUS_WAIT = 1,
+	PCD_STATUS_NOK = -1,
+	PCD_STATUS_INVALID_RULE = -2,
+	PCD_STATUS_BAD_PARAMS = -3,
+	PCD_STATUS_TIMEOUT = -4
+	
+} PCD_status_e;
 
 #endif /* _SYSTEM_TYPES_H_ */
-

@@ -63,8 +63,8 @@ typedef struct schedType_t
     schedType_e type;
     union
     {
-        Int32   fifoSched;
-        Uint32  niceSched;
+        int32_t   fifoSched;
+        u_int32_t  niceSched;
     };
 
 } schedType_t;

@@ -42,10 +42,18 @@
 #ifdef CONFIG_PCD_PLATFORM_ARM /* ARM registers */
 #include <asm/sigcontext.h>
 #endif
+
 #ifdef CONFIG_PCD_PLATFORM_X86 /* x86 processor context */
+#ifndef __USE_GNU
 #define __USE_GNU
+#endif
 #include <sys/ucontext.h>
 #endif
+
+#ifdef CONFIG_PCD_PLATFORM_X64 /* x64 registers */
+#include <sys/ucontext.h>
+#endif
+
 #ifdef CONFIG_PCD_PLATFORM_MIPS /* MIPS registers */
 #include <sys/ucontext.h>
 #endif
@@ -63,36 +71,40 @@
 typedef struct exception_t
 {
     /* Magic number */
-    Uint32 magic;
+    u_int32_t magic;
 
-    Char process_name[ PCD_EXCEPTION_MAX_PROCESS_NAME ];
+    char process_name[ PCD_EXCEPTION_MAX_PROCESS_NAME ];
 
     struct timespec time;
 
     pid_t process_id;
 
     /* The number of the exception signal */
-    Uint32 signal_number;
+    u_int32_t signal_number;
 
     /* The signal code from siginfo_t. Provides exception reason */
-    Uint32 signal_code;
+    u_int32_t signal_code;
 
     /* Fault address, if relevant */
     void *fault_address;
 
     /* The last error as reported via siginfo_t. Seems to be always 0 */
-    Uint32 signal_errno;
+    u_int32_t signal_errno;
 
     /* The last error in errno when the exception handler got called. */
-    Uint32 handler_errno;
+    u_int32_t handler_errno;
 
 #ifdef CONFIG_PCD_PLATFORM_ARM /* ARM registers */
     struct sigcontext regs;
 #endif
 
-/* x86 processor context */ /* MIPS registers */
+    /* x86 processor context */ /* MIPS registers */
 #if defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
     mcontext_t uc_mctx;
+#endif
+    
+#if defined(CONFIG_PCD_PLATFORM_X64) /* x64 registers */
+    mcontext_t uc_mcontext;
 #endif
 
 } exception_t;
@@ -108,17 +120,17 @@ typedef struct exception_t
  *  \brief          Init PCD exception handler
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_exception_init( void );
+PCD_status_e PCD_exception_init( void );
 
 /*! \fn             PCD_exception_close
  *  \brief          Close PCD exception handler
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_exception_close( void );
+PCD_status_e PCD_exception_close( void );
 
 /*! \fn             PCD_exception_listen
  *  \brief          PCD exception handler

@@ -79,99 +79,99 @@ typedef enum
  *  \brief 		Start a process associated with a rule
  *  \param[in] 		ruleId, optinal parameters
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_start_process( const struct ruleId_t *ruleId, const Char *optionalParams );
+PCD_status_e PCD_api_start_process( const struct ruleId_t *ruleId, const char *optionalParams );
 
 /*! \fn PCD_api_signal_process()
  *  \brief 		Signal a process associated with a rule
  *  \param[in] 		ruleId, signal id
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_signal_process( const struct ruleId_t *ruleId, Int32 sig );
+PCD_status_e PCD_api_signal_process( const struct ruleId_t *ruleId, int32_t sig );
 
 /*! \fn PCD_api_terminate_process()
  *  \brief 		Terminate a process associated with a rule, block until process dies
  *  \param[in] 		ruleId
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_terminate_process( const struct ruleId_t *ruleId );
+PCD_status_e PCD_api_terminate_process( const struct ruleId_t *ruleId );
 
 /*! \fn PCD_api_terminate_process_non_blocking()
  *  \brief 		Terminate a process associated with a rule in non blocking mode
  *  \param[in] 		ruleId
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_terminate_process_non_blocking( const struct ruleId_t *ruleId );
+PCD_status_e PCD_api_terminate_process_non_blocking( const struct ruleId_t *ruleId );
 
 /*! \fn PCD_api_kill_process()
  *  \brief 		Kill a process associated with a rule
  *  \param[in] 		ruleId
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_kill_process( const struct ruleId_t *ruleId );
+PCD_status_e PCD_api_kill_process( const struct ruleId_t *ruleId );
 
 /*! \fn PCD_api_send_process_ready()
  *  \brief 		Send PROCESS_READY event to PCD
  *  \param[in] 		None
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_send_process_ready( void );
+PCD_status_e PCD_api_send_process_ready( void );
 
 /*! \fn PCD_api_get_rule_state()
  *  \brief 		Get rule state
  *  \param[in] 		ruleId
  *  \param[in,out] 	ruleState, see pcdApiRuleState_e
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_get_rule_state( const struct ruleId_t *ruleId, pcdApiRuleState_e *ruleState );
+PCD_status_e PCD_api_get_rule_state( const struct ruleId_t *ruleId, pcdApiRuleState_e *ruleState );
 
 /*! \fn PCD_api_register_exception_handlers()
  *  \brief 		Register default PCD exception handler
  *  \param[in] 		argv[0]
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_register_exception_handlers( Char *name, Cleanup_func cleanup );
+PCD_status_e PCD_api_register_exception_handlers( char *name, Cleanup_func cleanup );
 
-/*! \fn PCD_main_find_process_id( Char *cliname )
+/*! \fn PCD_main_find_process_id( char *cliname )
  *  \brief Find process ID, detects if another instance alrady running.
  *  \param[in] 		Process name
  *  \return pid on success, or 0 if not found
  */
-pid_t PCD_api_find_process_id( Char *name );
+pid_t PCD_api_find_process_id( char *name );
 
 /*! \fn PCD_api_reduce_net_rx_priority
  *  \brief Reduce net-rx task priority to a given priority value (non preemtive mode)
  *  \param[in] 		New priority: 19 (lowest) to -19 (highest)
- *  \return 		STATUS_OK - Success, <0 - Error
+ *  \return 		PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_reduce_net_rx_priority( Int32 priority );
+PCD_status_e PCD_api_reduce_net_rx_priority( int32_t priority );
 
 /*! \fn PCD_api_restore_net_rx_priority
  *  \brief Restore net-rx task original priority
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_restore_net_rx_priority( void );
+PCD_status_e PCD_api_restore_net_rx_priority( void );
 
-/*! \fn PCD_api_reboot( Char *reason )
+/*! \fn PCD_api_reboot( char *reason )
  *  \brief Display a reboot reason (optional) and reboot the system.
  *  \param[in] 		Reboot reason (optinal)
  *  \param[in] 		Force: Force reboot even if PCD is in debug mode.
  *  \return Never returns
  */
-void PCD_api_reboot( const Char *reason, Bool force );
+void PCD_api_reboot( const char *reason, bool_t force );
 
 /*! \def PCD_API_REBOOT_MACRO
  *  \brief Helper macro with default reboot request message
  */
-#define PCD_API_REBOOT_MACRO( force ) ({ Char buffer[ 128 ]; snprintf( buffer, sizeof( buffer ), "Reboot requested by process %d in %s line %d", getpid(), __FUNCTION__, __LINE__ ); PCD_api_reboot( buffer, force ); })
+#define PCD_API_REBOOT_MACRO( force ) ({ char buffer[ 128 ]; snprintf( buffer, sizeof( buffer ), "Reboot requested by process %d in %s line %d", getpid(), __FUNCTION__, __LINE__ ); PCD_api_reboot( buffer, force ); })
 
 /*! \def PCD_API_REBOOT
  *  \brief Reboot the system through the PCD, use a standard reason message stating the function and line

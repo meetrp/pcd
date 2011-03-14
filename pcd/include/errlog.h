@@ -58,9 +58,9 @@
  *  \brief 			Initialize errlog module
  *  \param[in] 		Log filename
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, Otherwise - Error
+ *  \return			PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_errlog_init( Char *logFile );
+PCD_status_e PCD_errlog_init( char *logFile );
 
 /*! \fn				PCD_errlog_close
  *  \brief 			Close errlog module
@@ -68,7 +68,7 @@ STATUS PCD_errlog_init( Char *logFile );
  *  \param[in,out] 	None
  *  \return			Pointer to Rule - Success, NULL - Error
  */
-STATUS PCD_errlog_close( void );
+PCD_status_e PCD_errlog_close( void );
 
 /*! \fn				PCD_errlog_log
  *  \brief 			Add a new log entry in the error log file
@@ -76,7 +76,7 @@ STATUS PCD_errlog_close( void );
  *  \param[in,out] 	None
  *  \return			Pointer to Rule - Success, NULL - Error
  */
-void PCD_errlog_log( Char *buffer, Bool timeStamp );
+void PCD_errlog_log( char *buffer, bool_t timeStamp );
 
 #endif /* _ERRLOG_H_ */
 

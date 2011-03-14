@@ -34,6 +34,11 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Copyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd
+ * 
+ * Change log:
+ * - Use standard system types
+ * 
  */
 
 #include <unistd.h>
@@ -127,10 +132,10 @@
  */
 typedef struct
 {
-    Int32   fd;
-    Char    path[ IPC_UNIX_PATH_MAX ];
-    Uint32  flags;
-    Uint32  owner;
+    int32_t   fd;
+    char    path[ IPC_UNIX_PATH_MAX ];
+    u_int32_t  flags;
+    u_int32_t  owner;
     pid_t   pid;
 
 } IPC_client_t;
@@ -151,7 +156,7 @@ typedef struct
 typedef struct
 {
     key_t   i_key;
-    Int32   i_shmid;
+    int32_t   i_shmid;
     void    *i_shmaddr;
 
 } IPC_info_t;
@@ -172,11 +177,11 @@ static IPC_info_t info;
 
 /*!\fn IPC_init
  * \brief Initialize the IPC module. To be used in case it requires general init.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_init( Uint32 flags )
+IPC_status_e IPC_init( u_int32_t flags )
 {
-    Int32 newdb = 0;
+    int32_t newdb = 0;
 
     ENTER_FUNC;
 
@@ -185,7 +190,7 @@ STATUS IPC_init( Uint32 flags )
         /* Generate an IPC key */
         if ((info.i_key = ftok("/proc/version", 124)) == -1)
         {
-            return STATUS_NOK;
+            return IPC_STATUS_NOK;
         }
 
         /* Try to get an existing shm */
@@ -197,7 +202,7 @@ STATUS IPC_init( Uint32 flags )
             if ((info.i_shmid = shmget(info.i_key, sizeof( IPC_list_t ), IPC_CREAT | 0666 )) < 0 )
             {
                 IPC_PRINTF_ERROR_STDERR( "Shared memory failure" );
-                return STATUS_NOK;
+                return IPC_STATUS_NOK;
             }
         }
 
@@ -205,7 +210,7 @@ STATUS IPC_init( Uint32 flags )
         if ((info.i_shmaddr = (char *)shmat(info.i_shmid, NULL, 0)) == NULL)
         {
             IPC_PRINTF_ERROR_STDERR( "Shared memory failure" );
-            return STATUS_NOK;
+            return IPC_STATUS_NOK;
         }
 
         IPC_Clients = (IPC_list_t *)info.i_shmaddr;
@@ -217,18 +222,18 @@ STATUS IPC_init( Uint32 flags )
             memset( IPC_Clients, 0, sizeof( IPC_Clients ) );
         }
     }
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_start
  * \brief Start a communication channel.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags )
+IPC_status_e IPC_start( char *myName, IPC_context_t *myContext, u_int32_t flags )
 {
     struct sockaddr_un sun;
-    Int32 fd;
-    Int32 i = 0;
+    int32_t fd;
+    int32_t i = 0;
 
     ENTER_FUNC;
 
@@ -236,7 +241,7 @@ STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags )
     if( !initDone || !myName || !myContext )
     {
         IPC_PRINTF_ERROR_STDERR( "Failed to start IPC library" );
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     pthread_mutex_lock( &IPC_Clients->lock );
@@ -259,7 +264,7 @@ STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags )
         IPC_PRINTF_ERROR_STDERR( "Maximum amount of clients has reached, consider enlarging the list" );
 
         /* No more space in list */
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     flags |= MSG_DONTWAIT;
@@ -270,7 +275,7 @@ STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags )
         IPC_PRINTF_ERROR_STDERR( "Low level socket error" );
 
         pthread_mutex_unlock( &IPC_Clients->lock );
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
     sun.sun_family = AF_UNIX;
     snprintf( sun.sun_path, IPC_UNIX_PATH_MAX, "%s/%s.ctl", IPC_SOCKET_PATH, myName );
@@ -285,14 +290,14 @@ STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags )
         {
             IPC_PRINTF_ERROR_STDERR( "Second instance already running" );
             pthread_mutex_unlock( &IPC_Clients->lock );
-            return STATUS_NOK;
+            return IPC_STATUS_NOK;
         }
         /* That wasn't it, lets try removing the socket from the filesystem */
         if ( unlink( sun.sun_path ) < 0 )
         {
             IPC_PRINTF_ERROR_STDERR( "Error removing old socket" );
             pthread_mutex_unlock( &IPC_Clients->lock );
-            return STATUS_NOK;
+            return IPC_STATUS_NOK;
         }
         /* Ok, if we are here, then we unlinked the old socket. Lets bind again */
         if ( bind( fd, (struct sockaddr*)&sun, sizeof(struct sockaddr_un) )<0 )
@@ -300,7 +305,7 @@ STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags )
             IPC_PRINTF_ERROR_STDERR( "Error binding socket" );
             close( fd );
             pthread_mutex_unlock( &IPC_Clients->lock );
-            return STATUS_NOK;
+            return IPC_STATUS_NOK;
         }
     }
     *myContext = ( IPC_context_t )i;
@@ -313,23 +318,23 @@ STATUS IPC_start( Char *myName, IPC_context_t *myContext, Uint32 flags )
     strcpy( IPC_Clients->list[ i ].path, sun.sun_path );
 
     pthread_mutex_unlock( &IPC_Clients->lock );
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_stop
  * \brief Stop a communication channel, free all the resources.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_stop( IPC_context_t myContext )
+IPC_status_e IPC_stop( IPC_context_t myContext )
 {
-    Int32 i = (Int32)myContext;
+    int32_t i = (int32_t)myContext;
 
     ENTER_FUNC;
 
     /* Sanity checks */
     if( i >= IPC_MAX_LIST_SIZE || IPC_Clients->list[ i ].fd == 0 )
     {
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     pthread_mutex_lock( &IPC_Clients->lock );
@@ -344,17 +349,17 @@ STATUS IPC_stop( IPC_context_t myContext )
     IPC_Clients->list[ i ].owner = IPC_NO_OWNER;
 
     pthread_mutex_unlock( &IPC_Clients->lock );
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_alloc_msg
  * \brief Allocate memory for a message. Note that this pointer is not usable, it is a pointer for
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-IPC_message_t *IPC_alloc_msg( IPC_context_t myContext, Uint32 size )
+IPC_message_t *IPC_alloc_msg( IPC_context_t myContext, u_int32_t size )
 {
     IPC_message_t *msg;
-    Int32 i = (Int32)myContext;
+    int32_t i = (int32_t)myContext;
 
     ENTER_FUNC;
 
@@ -384,7 +389,7 @@ IPC_message_t *IPC_alloc_msg( IPC_context_t myContext, Uint32 size )
 
 /*!\fn IPC_get_msg
  * \brief Get a pointer to the data in the message body. Required in case the IPC module encapsulates infromation in the message body.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
 void *IPC_get_msg( IPC_message_t *msg )
 {
@@ -401,9 +406,9 @@ void *IPC_get_msg( IPC_message_t *msg )
 
 /*!\fn IPC_free_msg
  * \brief Free message memory.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_free_msg( IPC_message_t *msg )
+IPC_status_e IPC_free_msg( IPC_message_t *msg )
 {
     ENTER_FUNC;
 
@@ -411,31 +416,31 @@ STATUS IPC_free_msg( IPC_message_t *msg )
     if ( !msg || msg->magic != IPC_MESSAGE_MAGIC )
     {
         IPC_PRINTF_ERROR_STDERR( "Invalid IPC message" );
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     /* Just in case... */
     msg->magic = ~IPC_MESSAGE_MAGIC;
 
     free( msg );
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_send_msg
  * \brief Send a message to a destination. Use either the destination's context or name.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_send_msg( IPC_context_t destContext, IPC_message_t *msg )
+IPC_status_e IPC_send_msg( IPC_context_t destContext, IPC_message_t *msg )
 {
     struct sockaddr_un to;
-    Int32 destIdx = (Int32)destContext;
+    int32_t destIdx = (int32_t)destContext;
 
     ENTER_FUNC;
 
     /* Sanity checks */
     if ( !msg || msg->magic != IPC_MESSAGE_MAGIC || destIdx >= IPC_MAX_LIST_SIZE || IPC_Clients->list[ destIdx ].fd == 0 )
     {
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     to.sun_family = AF_UNIX;
@@ -445,35 +450,35 @@ STATUS IPC_send_msg( IPC_context_t destContext, IPC_message_t *msg )
     if ( sendto( IPC_Clients->list[ msg->context ].fd, msg, msg->size, IPC_Clients->list[ msg->context ].flags, (struct sockaddr *)&to, sizeof(struct sockaddr_un) ) < 0 )
     {
         IPC_PRINTF_ERROR_STDERR( "Send IPC messaged failed" );
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     /* Message was copied by the kernel, we can now free the message */
     IPC_free_msg( msg );
 
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_wait_msg
  * \brief Wait a specific amount of time for an incoming message.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, IPC_timeout_e timeout )
+IPC_status_e IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, IPC_timeout_e timeout )
 {
     struct timeval to, *pto;
     fd_set rdset;
-    Int32 i = (Int32)myContext;
-    Int32 ret;
-    Int32 fd;
+    int32_t i = (int32_t)myContext;
+    int32_t ret;
+    int32_t fd;
     void *localMsgBuffer = NULL;
 
     /* Sanity checks */
     if( i >= IPC_MAX_LIST_SIZE || !msgBuffer || IPC_Clients->list[ i ].fd == 0 )
     {
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
-    fd = (Int32)IPC_Clients->list[ i ].fd;
+    fd = (int32_t)IPC_Clients->list[ i ].fd;
 
     /* Setup timeout */
     if( timeout == IPC_TIMEOUT_FOREVER )
@@ -511,7 +516,7 @@ STATUS IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, IPC_tim
     if(ret <= 0)
     {
         /* timeout or error, return with error */
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
     else
     {
@@ -539,23 +544,23 @@ STATUS IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, IPC_tim
         }
         else
         {
-            return STATUS_NOK;
+            return IPC_STATUS_NOK;
         }
     }
 
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 
     wait_msg_fail:
     free( localMsgBuffer );
 
-    return STATUS_NOK;
+    return IPC_STATUS_NOK;
 }
 
 /*!\fn IPC_reply_msg
  * \brief Reply to an incoming message. Incoming message needs to be freed after replying.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_reply_msg( IPC_message_t *incomingMsg, IPC_message_t *replyMsg )
+IPC_status_e IPC_reply_msg( IPC_message_t *incomingMsg, IPC_message_t *replyMsg )
 {
     struct sockaddr_un to;
 
@@ -565,51 +570,51 @@ STATUS IPC_reply_msg( IPC_message_t *incomingMsg, IPC_message_t *replyMsg )
     if ( !incomingMsg || incomingMsg->magic != IPC_MESSAGE_MAGIC
          || !replyMsg || replyMsg->magic != IPC_MESSAGE_MAGIC )
     {
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     to.sun_family = AF_UNIX;
-    strcpy( to.sun_path, IPC_Clients->list[ (Int32)incomingMsg->context ].path );
+    strcpy( to.sun_path, IPC_Clients->list[ (int32_t)incomingMsg->context ].path );
 
     /* Send a reply */
-    if ( sendto( IPC_Clients->list[ (Int32)replyMsg->context ].fd, replyMsg, replyMsg->size, IPC_Clients->list[ (Int32)replyMsg->context ].flags, (struct sockaddr *)&to, sizeof(struct sockaddr_un) ) < 0 )
+    if ( sendto( IPC_Clients->list[ (int32_t)replyMsg->context ].fd, replyMsg, replyMsg->size, IPC_Clients->list[ (int32_t)replyMsg->context ].flags, (struct sockaddr *)&to, sizeof(struct sockaddr_un) ) < 0 )
     {
         IPC_PRINTF_ERROR_STDERR( "Send IPC messaged failed" );
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     /* Message was copied by the kernel, we can now free the message */
     IPC_free_msg( replyMsg );
 
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 
 }
 
 /*!\fn IPC_get_msg_context
  * \brief Get the owner index of the message
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_get_msg_context( IPC_message_t *msg, IPC_context_t *msgContext )
+IPC_status_e IPC_get_msg_context( IPC_message_t *msg, IPC_context_t *msgContext )
 {
     ENTER_FUNC;
 
     /* Sanity checks */
     if ( !msg || !msgContext || msg->magic != IPC_MESSAGE_MAGIC  )
     {
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     *msgContext = (IPC_context_t)msg->context;
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_cleanup_proc
  * \brief Cleanup IPC resources of a specific process (optional).
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_cleanup_proc( pid_t pid )
+IPC_status_e IPC_cleanup_proc( pid_t pid )
 {
-    Int32 i = 0;
+    int32_t i = 0;
 
     ENTER_FUNC;
 
@@ -623,45 +628,45 @@ STATUS IPC_cleanup_proc( pid_t pid )
         i++;
     }
 
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_set_owner
  * \brief Set ownership (index value) on an IPC resource (optional).
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_set_owner( IPC_context_t myContext, Uint32 owner )
+IPC_status_e IPC_set_owner( IPC_context_t myContext, u_int32_t owner )
 {
-    Int32 i = (Int32)myContext;
+    int32_t i = (int32_t)myContext;
 
     ENTER_FUNC;
 
     /* Sanity checks */
     if ( i >= IPC_MAX_LIST_SIZE )
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
 
     pthread_mutex_lock( &IPC_Clients->lock );
 
     IPC_Clients->list[ i ].owner = owner;
 
     pthread_mutex_unlock( &IPC_Clients->lock );
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 
 /*!\fn IPC_get_context_by_owner
  * \brief Get an index value of an IPC resource (optional).
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_get_context_by_owner( IPC_context_t *destContext, Uint32 owner )
+IPC_status_e IPC_get_context_by_owner( IPC_context_t *destContext, u_int32_t owner )
 {
-    Int32 i = 0;
+    int32_t i = 0;
 
     ENTER_FUNC;
 
     /* Sanity checks */
     if( !destContext )
     {
-        return STATUS_NOK;
+        return IPC_STATUS_NOK;
     }
 
     pthread_mutex_lock( &IPC_Clients->lock );
@@ -673,23 +678,23 @@ STATUS IPC_get_context_by_owner( IPC_context_t *destContext, Uint32 owner )
             *destContext = ( IPC_context_t )i;
 
             pthread_mutex_unlock( &IPC_Clients->lock );
-            return STATUS_OK;
+            return IPC_STATUS_OK;
         }
 
         i++;
     }
 
     pthread_mutex_unlock( &IPC_Clients->lock );
-    return STATUS_NOK;
+    return IPC_STATUS_NOK;
 }
 
 /*!\fn IPC_general_func
  * \brief Optional general function for any extension required.
- * \return          STATUS_OK - Success, <0 - Error
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
-STATUS IPC_general_func( Uint32 value, void *data, Uint32 dataSize )
+IPC_status_e IPC_general_func( u_int32_t value, void *data, u_int32_t dataSize )
 {
     ENTER_FUNC;
-    return STATUS_OK;
+    return IPC_STATUS_OK;
 }
 

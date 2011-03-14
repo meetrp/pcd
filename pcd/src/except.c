@@ -21,7 +21,7 @@
  * Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
  * 
  * Change log:
- * - Support MIPS and X86 Platforms
+ * - Support MIPS, x86 and x64 Platforms
  * - Bug fixes
  */
 
@@ -32,6 +32,9 @@
  * PCD Project at SourceForge: http://sourceforge.net/projects/pcd/
  *  
  */
+
+/* Required for some ucontetx.h headers */
+#define _GNU_SOURCE
 
 /**************************************************************************/
 /*      INCLUDES                                                          */
@@ -60,11 +63,11 @@
 
 #define PCD_ERRLOG_BUF_SIZE             1024
 
-static Int32 fd = -1;
+static int32_t fd = -1;
 static fd_set rdset;
 
 /* This translates a signal code into a readable string */
-static inline char *PCD_code2str(Int32 code, Int32 signal)
+static inline char *PCD_code2str(int32_t code, int32_t signal)
 {
     switch ( code )
     {
@@ -154,13 +157,14 @@ static inline char *PCD_code2str(Int32 code, Int32 signal)
     return "Unhandled signal handler";
 }
 
-char *strsignal( Int32 sig );
+char *strsignal( int32_t sig );
 
 static void PCD_dump_maps_file( pid_t pid )
 {
     struct stat fbuf;
-    Char mapsFile[ 22 ];
-    Int32 fd;
+    char mapsFile[ 22 ];
+    int32_t fd;
+	int32_t i;
 
     sprintf( mapsFile, "%s/%d.maps", CONFIG_PCD_TEMP_PATH, pid );
 
@@ -172,15 +176,15 @@ static void PCD_dump_maps_file( pid_t pid )
 
     if ( fd > 0 )
     {
-        Char buffer[ 512 ];
-        Int32 readBytes = 0;
+        char buffer[ 512 ];
+        int32_t readBytes = 0;
 
-        write( STDERR_FILENO, "\nMaps file:\n\n", 13 );
+        i = write( STDERR_FILENO, "\nMaps file:\n\n", 13 );
 
         /* Read the maps file and display it on the console */
         while ( ( readBytes = read( fd, buffer, sizeof( buffer ) ) ) > 0 )
         {
-            write( STDERR_FILENO, buffer, readBytes );
+            i = write( STDERR_FILENO, buffer, readBytes );
         }
 
         close( fd );
@@ -192,14 +196,15 @@ static void PCD_dump_maps_file( pid_t pid )
 
 static void PCD_dump_fault_info( exception_t *exception )
 {
-    Char buffer[ PCD_ERRLOG_BUF_SIZE ];
-    Int32 i;
+    char buffer[ PCD_ERRLOG_BUF_SIZE ];
+    int32_t i;
 
     memset( buffer, 0, PCD_ERRLOG_BUF_SIZE );
 
-    write( STDERR_FILENO, "\n**************************************************************************\n", 76 );
-    write( STDERR_FILENO, "**************************** Exception Caught ****************************", 74 );
-    write( STDERR_FILENO, "\n**************************************************************************\n", 76 );
+    /* Adding i for return value to avoid warnings on newer versions of gcc */
+	i = write( STDERR_FILENO, "\n**************************************************************************\n", 76 );
+    i = write( STDERR_FILENO, "**************************** Exception Caught ****************************", 74 );
+    i = write( STDERR_FILENO, "\n**************************************************************************\n", 76 );
 
     i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nSignal information:\n\nTime: %sProcess name: %s\nPID: %d\nFault Address: %p\nSignal: %s\nSignal Code: %s\nLast error: %s (%d)\nLast error (by signal): %d\n",
                   ctime(&(exception->time.tv_sec)),
@@ -210,7 +215,7 @@ static void PCD_dump_fault_info( exception_t *exception )
     if ( i<0 )
         return;
 
-    write( STDERR_FILENO, buffer, i );
+    i = write( STDERR_FILENO, buffer, i );
 
     PCD_errlog_log( buffer, False );
 
@@ -303,45 +308,45 @@ static void PCD_dump_fault_info( exception_t *exception )
 				exception->uc_mctx.regmask,
 				exception->uc_mctx.status,
 				exception->uc_mctx.pc,
-				(Uint32)exception->uc_mctx.gregs[0],
-				(Uint32)exception->uc_mctx.gregs[1],
-				(Uint32)exception->uc_mctx.gregs[2],
-				(Uint32)exception->uc_mctx.gregs[3],
-				(Uint32)exception->uc_mctx.gregs[4],
-				(Uint32)exception->uc_mctx.gregs[5],
-				(Uint32)exception->uc_mctx.gregs[6],
-				(Uint32)exception->uc_mctx.gregs[7],
-				(Uint32)exception->uc_mctx.gregs[8],
-				(Uint32)exception->uc_mctx.gregs[9],
-				(Uint32)exception->uc_mctx.gregs[10],
-				(Uint32)exception->uc_mctx.gregs[11],
-				(Uint32)exception->uc_mctx.gregs[12],
-				(Uint32)exception->uc_mctx.gregs[13],
-				(Uint32)exception->uc_mctx.gregs[14],
-				(Uint32)exception->uc_mctx.gregs[15],
-				(Uint32)exception->uc_mctx.gregs[16],
-				(Uint32)exception->uc_mctx.gregs[17],
-				(Uint32)exception->uc_mctx.gregs[18],
-				(Uint32)exception->uc_mctx.gregs[19],
-				(Uint32)exception->uc_mctx.gregs[20],
-				(Uint32)exception->uc_mctx.gregs[21],
-				(Uint32)exception->uc_mctx.gregs[22],
-				(Uint32)exception->uc_mctx.gregs[23],
-				(Uint32)exception->uc_mctx.gregs[24],
-				(Uint32)exception->uc_mctx.gregs[25],
-				(Uint32)exception->uc_mctx.gregs[26],
-				(Uint32)exception->uc_mctx.gregs[27],
-				(Uint32)exception->uc_mctx.gregs[28],
-				(Uint32)exception->uc_mctx.gregs[29],
-				(Uint32)exception->uc_mctx.gregs[30],
-				(Uint32)exception->uc_mctx.gregs[31]);
+				(u_int32_t)exception->uc_mctx.gregs[0],
+				(u_int32_t)exception->uc_mctx.gregs[1],
+				(u_int32_t)exception->uc_mctx.gregs[2],
+				(u_int32_t)exception->uc_mctx.gregs[3],
+				(u_int32_t)exception->uc_mctx.gregs[4],
+				(u_int32_t)exception->uc_mctx.gregs[5],
+				(u_int32_t)exception->uc_mctx.gregs[6],
+				(u_int32_t)exception->uc_mctx.gregs[7],
+				(u_int32_t)exception->uc_mctx.gregs[8],
+				(u_int32_t)exception->uc_mctx.gregs[9],
+				(u_int32_t)exception->uc_mctx.gregs[10],
+				(u_int32_t)exception->uc_mctx.gregs[11],
+				(u_int32_t)exception->uc_mctx.gregs[12],
+				(u_int32_t)exception->uc_mctx.gregs[13],
+				(u_int32_t)exception->uc_mctx.gregs[14],
+				(u_int32_t)exception->uc_mctx.gregs[15],
+				(u_int32_t)exception->uc_mctx.gregs[16],
+				(u_int32_t)exception->uc_mctx.gregs[17],
+				(u_int32_t)exception->uc_mctx.gregs[18],
+				(u_int32_t)exception->uc_mctx.gregs[19],
+				(u_int32_t)exception->uc_mctx.gregs[20],
+				(u_int32_t)exception->uc_mctx.gregs[21],
+				(u_int32_t)exception->uc_mctx.gregs[22],
+				(u_int32_t)exception->uc_mctx.gregs[23],
+				(u_int32_t)exception->uc_mctx.gregs[24],
+				(u_int32_t)exception->uc_mctx.gregs[25],
+				(u_int32_t)exception->uc_mctx.gregs[26],
+				(u_int32_t)exception->uc_mctx.gregs[27],
+				(u_int32_t)exception->uc_mctx.gregs[28],
+				(u_int32_t)exception->uc_mctx.gregs[29],
+				(u_int32_t)exception->uc_mctx.gregs[30],
+				(u_int32_t)exception->uc_mctx.gregs[31]);
 
     if ( i<0 )
         return;
 #endif
 
 #ifdef CONFIG_PCD_PLATFORM_X86 /* Print X86 registers */
-    i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nX86 registers:\n\n"
+    i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nx86 registers:\n\n"
                   "cr2=0x%08lx\n"
                   "oldmask=0x%08lx\n"
                   "GS=0x%08x\n"
@@ -388,16 +393,69 @@ static void PCD_dump_fault_info( exception_t *exception )
     if ( i<0 )
         return;
 #endif
+#if defined(CONFIG_PCD_PLATFORM_X64) /* x64 registers */
+    i = snprintf( buffer, PCD_ERRLOG_BUF_SIZE - 1, "\nx64 registers:\n\n"
+                  "R8=0x%016lx\n"
+                  "R9=0x%016lx\n"
+                  "R10=0x%016lx\n"
+                  "R11=0x%016lx\n"
+                  "R12=0x%016lx\n"
+                  "R13=0x%016lx\n"
+                  "R14=0x%016lx\n"
+                  "R15=0x%016lx\n"
+                  "RDI=0x%016lx\n"
+                  "RSI=0x%016lx\n"
+                  "RBP=0x%016lx\n"
+                  "RBX=0x%016lx\n"
+                  "RDX=0x%016lx\n"
+                  "RAX=0x%016lx\n"
+                  "RCX=0x%016lx\n"
+                  "RSP=0x%016lx\n"
+                  "RIP=0x%016lx\n"
+                  "EFL=0x%016lx\n"
+                  "CSGSFS=0x%016lx\n"
+                  "ERR=0x%016lx\n"
+                  "TRAPNO=0x%016lx\n"
+                  "OLDMASK=0x%016lx\n"
+                  "CR2=0x%016lx\n",
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R8],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R9],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R10],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R11],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R12],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R13],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R14],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_R15],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RDI],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RSI],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RBP],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RBX],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RDX],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RAX],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RCX],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RSP],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_RIP],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_EFL],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_CSGSFS],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_ERR],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_TRAPNO],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_OLDMASK],
+                  (u_int64_t)exception->uc_mcontext.gregs[REG_CR2]);
 
-    write( STDERR_FILENO, buffer, i );
+    if ( i<0 )
+        return;
+
+#endif
+
+    i = write( STDERR_FILENO, buffer, i );
     PCD_errlog_log( buffer, False );
 
     PCD_dump_maps_file( exception->process_id );
 
-    write( STDERR_FILENO, "\n**************************************************************************\n", 76 );
+    i = write( STDERR_FILENO, "\n**************************************************************************\n", 76 );
 }
 
-STATUS PCD_exception_init( void )
+PCD_status_e PCD_exception_init( void )
 {
     /* Create a FIFO stream that PCD will listen to */
     if ( mkfifo(PCD_EXCEPTION_FILE, 0644) < 0 )
@@ -405,7 +463,7 @@ STATUS PCD_exception_init( void )
         if ( errno != EEXIST )
         {
             PCD_PRINTF_STDERR( "Failed to create FIFO exception file %s",  PCD_EXCEPTION_FILE );
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
     }
 
@@ -415,17 +473,17 @@ STATUS PCD_exception_init( void )
     if ( fd < 0 )
     {
         PCD_PRINTF_STDERR( "Failed to open exception file %s",  PCD_EXCEPTION_FILE );
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Clear read fd */
     FD_ZERO(&rdset);
     FD_SET(fd, &rdset);
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_exception_close( void )
+PCD_status_e PCD_exception_close( void )
 {
     if ( fd > 0 )
     {
@@ -435,12 +493,12 @@ STATUS PCD_exception_close( void )
         unlink( PCD_EXCEPTION_FILE );
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 void PCD_exception_listen( void )
 {
-    Int32 ret;
+    int32_t ret;
     struct timeval timeout = { 0, 0}; /* Do not block */
 
     ret = select(fd+1, &rdset, NULL, NULL, &timeout );
@@ -458,8 +516,8 @@ void PCD_exception_listen( void )
     else
     {
         exception_t exception;
-        Char *buffer = ( Char *)&exception;
-        Uint32 remainingBytes = sizeof( exception_t );
+        char *buffer = ( char *)&exception;
+        u_int32_t remainingBytes = sizeof( exception_t );
 
         /* Read the incoming message. Might arrive in parts, and we read until we get
            the whole exception structure, or an error has occurred. */

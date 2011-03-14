@@ -52,9 +52,9 @@ static rule_t *lastReturnedRule = NULL;
 /*      IMPLEMENTATION                                                    */
 /**************************************************************************/
 
-static STATUS PCD_rulesdb_add_rule_to_group( ruleGroup_t *group, rule_t *newRule )
+static PCD_status_e PCD_rulesdb_add_rule_to_group( ruleGroup_t *group, rule_t *newRule )
 {
-    Char *ruleName = newRule->ruleId.ruleName;
+    char *ruleName = newRule->ruleId.ruleName;
     rule_t *ruleList = group->firstRule;
     rule_t *prevRule;
 
@@ -63,7 +63,7 @@ static STATUS PCD_rulesdb_add_rule_to_group( ruleGroup_t *group, rule_t *newRule
          ruleList = newRule;
          ruleList->next = NULL;
 
-         return STATUS_OK;
+         return PCD_STATUS_OK;
     }
 
     prevRule = NULL;
@@ -71,14 +71,14 @@ static STATUS PCD_rulesdb_add_rule_to_group( ruleGroup_t *group, rule_t *newRule
 
     while ( 1 )
     {
-         Int32 val;
+         int32_t val;
 
          val = strcmp( ruleName, ruleList->ruleId.ruleName );
 
          if ( val == 0 )
          {
               PCD_PRINTF_STDERR( "Multiple definitions of rule %s_%s, ignoring", newRule->ruleId.groupName, newRule->ruleId.ruleName );
-              return STATUS_NOK;
+              return PCD_STATUS_NOK;
          }
 
          /* Search for the right place to put the rule */
@@ -118,23 +118,23 @@ static STATUS PCD_rulesdb_add_rule_to_group( ruleGroup_t *group, rule_t *newRule
          }
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_rulesdb_add_rule( rule_t *newrule )
+PCD_status_e PCD_rulesdb_add_rule( rule_t *newrule )
 {
     ruleGroup_t *searchList = rulesListHead;
     rule_t *rule;
 
     if( !newrule )
-         return STATUS_NOK;
+         return PCD_STATUS_NOK;
 
     rule = malloc( sizeof( rule_t ) );
 
     if ( !rule )
     {
          PCD_PRINTF_STDERR( "failed to allocate memory" );
-         return STATUS_NOK;
+         return PCD_STATUS_NOK;
     }
 
     memcpy( rule, newrule, sizeof( rule_t ) );
@@ -144,12 +144,12 @@ STATUS PCD_rulesdb_add_rule( rule_t *newrule )
          /* Find if the group already exists */
          if ( strcmp( searchList->groupName, rule->ruleId.groupName ) == 0 )
          {
-              if ( PCD_rulesdb_add_rule_to_group( searchList, rule ) == STATUS_NOK )
+              if ( PCD_rulesdb_add_rule_to_group( searchList, rule ) == PCD_STATUS_NOK )
               {
                    free( rule );
                    rule = NULL;
               }
-              return STATUS_OK;
+              return PCD_STATUS_OK;
          }
 
          searchList = searchList->next;
@@ -164,7 +164,7 @@ STATUS PCD_rulesdb_add_rule( rule_t *newrule )
          {
               free( rule );
               PCD_PRINTF_STDERR(  "failed to allocate memory" );
-              return STATUS_NOK;
+              return PCD_STATUS_NOK;
          }
 
          searchList->groupName = malloc( strlen( rule->ruleId.groupName ) + 1 );
@@ -174,7 +174,7 @@ STATUS PCD_rulesdb_add_rule( rule_t *newrule )
               free( rule );
               free( searchList );
               PCD_PRINTF_STDERR(  "failed to allocate memory" );
-              return STATUS_NOK;
+              return PCD_STATUS_NOK;
          }
 
          strcpy( searchList->groupName, rule->ruleId.groupName );
@@ -203,7 +203,7 @@ STATUS PCD_rulesdb_add_rule( rule_t *newrule )
          }
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 rule_t *PCD_rulesdb_get_rule_by_id( ruleId_t *ruleId )
@@ -256,7 +256,7 @@ rule_t *PCD_rulesdb_get_rule_by_id( ruleId_t *ruleId )
          newRule.optionalParams = NULL;
          strcpy( newRule.ruleId.ruleName, ruleId->ruleName );
 
-         if( PCD_rulesdb_add_rule( &newRule ) == STATUS_OK )
+         if( PCD_rulesdb_add_rule( &newRule ) == PCD_STATUS_OK )
          {
               return PCD_rulesdb_get_rule_by_id( ruleId );
          }
@@ -265,7 +265,7 @@ rule_t *PCD_rulesdb_get_rule_by_id( ruleId_t *ruleId )
     return NULL;
 }
 
-rule_t *PCD_rulesdb_get_rule_by_pid( Int32 pid )
+rule_t *PCD_rulesdb_get_rule_by_pid( int32_t pid )
 {
     ruleGroup_t *searchList = rulesListHead;
 
@@ -327,7 +327,7 @@ rule_t *PCD_rulesdb_get_next( void )
     return NULL;
 }
 
-STATUS PCD_rulesdb_activate( void )
+PCD_status_e PCD_rulesdb_activate( void )
 {
     rule_t *rule;
 
@@ -340,10 +340,10 @@ STATUS PCD_rulesdb_activate( void )
          if ( rule->ruleState == PCD_RULE_ACTIVE )
          {
               /* Enqueue the rule in the timer module */
-              if ( PCD_timer_enqueue_rule( rule ) != STATUS_OK )
+              if ( PCD_timer_enqueue_rule( rule ) != PCD_STATUS_OK )
               {
                    PCD_PRINTF_STDERR( "Failed to enqueue rule %s_%s", rule->ruleId.groupName, rule->ruleId.ruleName );
-                   return STATUS_NOK;
+                   return PCD_STATUS_NOK;
               }
          }
 
@@ -351,13 +351,13 @@ STATUS PCD_rulesdb_activate( void )
          rule = PCD_rulesdb_get_next();
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_rulesdb_setup_optional_params( rule_t *rule, const Char *optionalParams )
+PCD_status_e PCD_rulesdb_setup_optional_params( rule_t *rule, const char *optionalParams )
 {
     if( ( !rule ) || ( !optionalParams ) )
-         return STATUS_NOK;
+         return PCD_STATUS_NOK;
 
     if( rule->optionalParams )
     {
@@ -367,16 +367,16 @@ STATUS PCD_rulesdb_setup_optional_params( rule_t *rule, const Char *optionalPara
     rule->optionalParams = malloc( strlen( optionalParams ) + 1 );
 
     if( !rule->optionalParams )
-         return STATUS_NOK;
+         return PCD_STATUS_NOK;
 
     strcpy( rule->optionalParams, optionalParams );
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_rulesdb_clear_optional_params( rule_t *rule )
+PCD_status_e PCD_rulesdb_clear_optional_params( rule_t *rule )
 {
     if( !rule )
-         return STATUS_NOK;
+         return PCD_STATUS_NOK;
 
     if ( rule->optionalParams )
     {
@@ -384,7 +384,7 @@ STATUS PCD_rulesdb_clear_optional_params( rule_t *rule )
          rule->optionalParams = NULL;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 

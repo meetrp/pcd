@@ -73,12 +73,12 @@ typedef struct pcdApiMessage_t
     union
     {
         pid_t       pid;
-        Int32       sig;
-        Int32       priority;
+        int32_t       sig;
+        int32_t       priority;
     };
     ruleId_t    ruleId;
-    Uint32      msgId;
-    Char        params[ CONFIG_PCD_MAX_PARAM_SIZE ];   /* Optional parameters */
+    u_int32_t      msgId;
+    char        params[ CONFIG_PCD_MAX_PARAM_SIZE ];   /* Optional parameters */
 
 } pcdApiMessage_t;
 
@@ -87,12 +87,12 @@ typedef struct pcdApiMessage_t
  */
 typedef struct pcdApiReplyMessage_t
 {
-    Uint32      msgId;
+    u_int32_t      msgId;
     union
     {
         pcdApiRuleState_e   ruleState;
     };
-    STATUS      retval;
+    PCD_status_e      retval;
 
 } pcdApiReplyMessage_t;
 
@@ -104,17 +104,17 @@ typedef struct pcdApiReplyMessage_t
  *  \brief          Module's init function
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_api_init( void );
+PCD_status_e PCD_api_init( void );
 
 /*! \fn             PCD_api_check_messages
  *  \brief          Check for incoming messages
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_api_check_messages( void );
+PCD_status_e PCD_api_check_messages( void );
 
 /*! \fn             PCD_api_reply_message
  *  \brief          Reply a termination request message
@@ -122,6 +122,6 @@ STATUS PCD_api_check_messages( void );
  *  \param[in,out]  None
  *  \return         None
  */
-void PCD_api_reply_message( void *cookie, STATUS retval );
+void PCD_api_reply_message( void *cookie, PCD_status_e retval );
 
 #endif /* _PCD_API_H_ */

@@ -47,20 +47,20 @@
 #define MAX_FILENAME_LEN      255
 #define MAX_GROUPS            16
 
-static Char *rulesFilename = NULL;
-Bool verboseOutput = True;
+static char *rulesFilename = NULL;
+bool_t verboseOutput = True;
 
-static Char *headerFilename = NULL;
+static char *headerFilename = NULL;
 static void *headerHandle = NULL;
 
 static void *graphHandle = NULL;
-static Char *graphFilename = NULL;
+static char *graphFilename = NULL;
 
-Char hostPrefix[ 128 ] = { "\0"};
+char hostPrefix[ 128 ] = { "\0"};
 
-static void PCD_main_usage( Char *execname );
+static void PCD_main_usage( char *execname );
 
-static void PCD_main_usage( Char *execname )
+static void PCD_main_usage( char *execname )
 {
     printf( "Usage: %s [options]\nOptions:\n\n", execname );
     printf( "-f FILE, --file=FILE\t\tSpecify PCD rules file.\n" );
@@ -74,34 +74,34 @@ static void PCD_main_usage( Char *execname )
 }
 
 /* Stub */
-void PCD_errlog_log( Char *buffer, Bool timeStamp )
+void PCD_errlog_log( char *buffer, bool_t timeStamp )
 {
 }
 
-STATUS PCD_rulesdb_add_rule( rule_t *newrule )
+PCD_status_e PCD_rulesdb_add_rule( rule_t *newrule )
 {
     if ( headerHandle )
     {
         /* Add a line in the header file */
-        if ( PCD_output_header_update_file( newrule, headerHandle ) != STATUS_OK )
+        if ( PCD_output_header_update_file( newrule, headerHandle ) != PCD_STATUS_OK )
         {
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
     }
 
     if ( graphHandle )
     {
         /* Add an entry in the graph file */
-        if ( PCD_graph_update_file( newrule, graphHandle ) != STATUS_OK )
+        if ( PCD_graph_update_file( newrule, graphHandle ) != PCD_STATUS_OK )
         {
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-void PCD_main_parse_params( Int32 argc, Char *argv[] )
+void PCD_main_parse_params( int32_t argc, char *argv[] )
 {
     int c;
 
@@ -154,7 +154,7 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
                 headerFilename = optarg;
                 /*
                 Create the output file */
-                if ( PCD_output_header_create_file( headerFilename, &headerHandle ) == STATUS_NOK )
+                if ( PCD_output_header_create_file( headerFilename, &headerHandle ) == PCD_STATUS_NOK )
                 {
                     PCD_PRINTF_STDERR( "Failed to create output file %s", headerFilename );
                     exit(1);
@@ -165,7 +165,7 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
                 graphFilename = optarg;
 
                 /* Create the output file */
-                if ( PCD_graph_create_file( graphFilename, &graphHandle ) == STATUS_NOK )
+                if ( PCD_graph_create_file( graphFilename, &graphHandle ) == PCD_STATUS_NOK )
                 {
                     PCD_PRINTF_STDERR( "Failed to create graph file %s", graphFilename );
                     exit(1);
@@ -201,9 +201,9 @@ void PCD_main_parse_params( Int32 argc, Char *argv[] )
 }
 
 
-int main( Int32 argc, Char *argv[] )
+int main( int32_t argc, char *argv[] )
 {
-    Uint32 ret = 0;
+    u_int32_t ret = 0;
 
     PCD_main_parse_params( argc, argv );
 
@@ -215,7 +215,7 @@ int main( Int32 argc, Char *argv[] )
     }
 
     /* Parse the configuration file, and initialize rules database */
-    if ( PCD_parser_parse( rulesFilename ) != STATUS_OK )
+    if ( PCD_parser_parse( rulesFilename ) != PCD_STATUS_OK )
     {
         ret = 1;
         goto cleanup;

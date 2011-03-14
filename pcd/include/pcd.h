@@ -50,13 +50,13 @@
 /**************************************************************************/
 /*      INTERFACE TYPES and STRUCT Definitions                            */
 /**************************************************************************/
-extern Bool verboseOutput;
-extern Bool debugMode;
+extern bool_t verboseOutput;
+extern bool_t debugMode;
 
 /*! \def PCD_VERSION
  *  \brief PCD Version
  */
-#define PCD_VERSION									"1.0.9"
+#define PCD_VERSION									"1.1.0"
 
 /*! \def PCD_PRINT_PREFIX
  *  \brief Holds the prefix for printouts
@@ -66,22 +66,25 @@ extern Bool debugMode;
 /*! \def PCD_PRINTF_STDOUT
  *  \brief Print a message to standard output
  */
-#define PCD_PRINTF_STDOUT( _format, _args... )        if( verboseOutput ) fprintf( stdout, PCD_PRINT_PREFIX _format ".\n", ## _args )
+#define PCD_PRINTF_STDOUT( _format, _args... )        \
+do { if( verboseOutput ) fprintf( stdout, "%s"_format "%s", PCD_PRINT_PREFIX, ##_args, ".\n" ); } while( 0 )
 
 /*! \def PCD_PRINTF_WARNING_STDOUT
  *  \brief Print a warning message to standard output
  */
-#define PCD_PRINTF_WARNING_STDOUT( _format, _args... )        if( verboseOutput ) fprintf( stdout, PCD_PRINT_PREFIX "Warning: " _format ".\n", ## _args )
+#define PCD_PRINTF_WARNING_STDOUT( _format, _args... ) \
+do { if( verboseOutput ) fprintf( stdout, "%s%s"_format "%s", PCD_PRINT_PREFIX, "Warning: ", ##_args, ".\n" ); } while( 0 )
 
 /*! \def PCD_PRINTF_STDERR
  *  \brief Print a message to standard error
  */
 #define PCD_PRINTF_STDERR( _format, _args... )        \
-{   Char tmpLogBuffer[ CONFIG_PCD_MAX_LOG_SIZE ]; \
-    sprintf( tmpLogBuffer, PCD_PRINT_PREFIX "Error: " _format ".\n", ## _args ); \
-    if( verboseOutput ) fprintf( stderr, tmpLogBuffer ); \
+do { char tmpLogBuffer[ CONFIG_PCD_MAX_LOG_SIZE ]; \
+    snprintf( tmpLogBuffer, CONFIG_PCD_MAX_LOG_SIZE - 1, "%s%s"_format "%s", PCD_PRINT_PREFIX, "Error: ", ##_args, ".\n" ); \
+	if( verboseOutput ) fprintf( stderr, "%s", tmpLogBuffer ); \
     PCD_errlog_log( tmpLogBuffer, True ); \
-}
+} while( 0 )
+
 
 /*! \def CONFIG_PCD_DEBUG
  *  \brief Enable debug prints if defined
@@ -96,7 +99,6 @@ extern Bool debugMode;
     #define PCD_FUNC_EXIT_PRINT
 #endif
 
-
 /*!\fn PCD_main_force_iteration
  * \brief Forces process iteration right after timer tick
  */
@@ -105,7 +107,7 @@ void PCD_main_force_iteration( void );
 /*!\fn PCD_main_set_self_priority
  * \brief Set the priority of the PCD in the system
  */
-void PCD_main_set_self_priority( Int32 priority, Int32 policy );
+void PCD_main_set_self_priority( int32_t priority, int32_t policy );
 
 #endif /* _PCD_H_ */
 

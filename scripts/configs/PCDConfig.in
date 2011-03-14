@@ -21,15 +21,20 @@ config PCD_PLATFORM_ARM
 		help 
 		Enable ARM support. Show detailed ARM register dump in case of a crash.
 
+config PCD_PLATFORM_MIPS
+		bool "MIPS" 
+		help 
+		Enable MIPS support. Show detailed MIPS register dump in case of a crash.
+
 config PCD_PLATFORM_X86
 		bool "X86" 
 		help 
 		Enable x86 (Intel) support. Show detailed x86 register dump in case of a crash.
 
-config PCD_PLATFORM_MIPS 
-		bool "MIPS" 
+config PCD_PLATFORM_X64
+		bool "X64" 
 		help 
-		Enable MIPS support. Show detailed MIPS register dump in case of a crash.
+		Enable x64 (Intel 64-bit) support. Show detailed x64 register dump in case of a crash.
 
 config PCD_PLATFORM_OTHER
 		bool "Other platforms" 

@@ -59,9 +59,9 @@ static IPC_context_t pcdContext;
 /*      IMPLEMENTATION                                                    */
 /**************************************************************************/
 
-static STATUS PCD_api_stop( rule_t *rule, Bool brutal, void *cookie )
+static PCD_status_e PCD_api_stop( rule_t *rule, bool_t brutal, void *cookie )
 {
-    STATUS retval;
+    PCD_status_e retval;
 
     /* Clear optional parameters */
     PCD_rulesdb_clear_optional_params( rule );
@@ -69,12 +69,12 @@ static STATUS PCD_api_stop( rule_t *rule, Bool brutal, void *cookie )
     /* Dequeue the rule from the timer queue */
     retval = PCD_timer_dequeue_rule( rule, False );
 
-    if ( retval == -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS )
+    if ( retval == PCD_STATUS_INVALID_RULE )
     {
         /* Fall here if the rule is completed and running (daemon) */
         retval = PCD_process_stop( rule, brutal, cookie );
 
-        if ( retval == STATUS_OK )
+        if ( retval == PCD_STATUS_OK )
         {
             /* Rule is now idle */
             rule->ruleState = PCD_RULE_IDLE;
@@ -82,7 +82,7 @@ static STATUS PCD_api_stop( rule_t *rule, Bool brutal, void *cookie )
             /* Wait for end of process */
             if ( cookie )
             {
-                retval = STATUS_PASS_INCOMPLETE;
+                retval = PCD_STATUS_WAIT;
             }
         }
     }
@@ -90,13 +90,13 @@ static STATUS PCD_api_stop( rule_t *rule, Bool brutal, void *cookie )
     return retval;
 }
 
-static STATUS PCD_api_start( rule_t *rule )
+static PCD_status_e PCD_api_start( rule_t *rule )
 {
     /* Enqueue the rule */
     return PCD_timer_enqueue_rule( rule );
 }
 
-static STATUS PCD_api_signal( rule_t *rule, Int32 sig )
+static PCD_status_e PCD_api_signal( rule_t *rule, int32_t sig )
 {
     /* Allow only SIGUSR signals */
     if ( ( sig == SIGUSR1 ) || ( sig == SIGUSR2 ) )
@@ -104,58 +104,58 @@ static STATUS PCD_api_signal( rule_t *rule, Int32 sig )
         return PCD_process_signal_by_rule( rule, sig );
     }
 
-    return -STATUS_BAD_OPTION_FORMAT;
+    return PCD_STATUS_BAD_PARAMS;
 }
 
-STATUS PCD_api_init( void )
+PCD_status_e PCD_api_init( void )
 {
     /* Init IPC */
-    if ( IPC_init( 0 ) != STATUS_OK )
+    if ( IPC_init( 0 ) != PCD_STATUS_OK )
     {
         PCD_PRINTF_STDERR( "Failed to init PCD API");
 
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Start IPC */
-    if ( IPC_start( CONFIG_PCD_SERVER_NAME, &pcdContext, 0 ) != STATUS_OK )
+    if ( IPC_start( CONFIG_PCD_SERVER_NAME, &pcdContext, 0 ) != PCD_STATUS_OK )
     {
         PCD_PRINTF_STDERR( "Failed to start IPC" );
 
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Set owner */
-    if ( IPC_set_owner( pcdContext, CONFIG_PCD_OWNER_ID ) != STATUS_OK )
+    if ( IPC_set_owner( pcdContext, CONFIG_PCD_OWNER_ID ) != PCD_STATUS_OK )
     {
         IPC_stop( pcdContext );
 
         PCD_PRINTF_STDERR( "Failed to set ownership");
 
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_api_check_messages( void )
+PCD_status_e PCD_api_check_messages( void )
 {
     IPC_message_t *msg;
-    Uint32 budget = 5;
+    u_int32_t budget = 5;
 
     /* Check for incoming messages */
     while ( budget-- && IPC_wait_msg( pcdContext, &msg, IPC_TIMEOUT_IMMEDIATE ) == 0 )
     {
         pcdApiMessage_t *data = IPC_get_msg( msg );
         rule_t *rule;
-        STATUS retval = STATUS_NOK;
+        PCD_status_e retval = PCD_STATUS_NOK;
         IPC_message_t *replyMsg = NULL;
         pcdApiReplyMessage_t *replyData = NULL;
         IPC_context_t msgContext;
 
         /* Check if we need to reply */
-        if ( IPC_get_msg_context( msg, &msgContext ) == STATUS_OK )
+        if ( IPC_get_msg_context( msg, &msgContext ) == PCD_STATUS_OK )
         {
             /* Allocate memory for reply message */
             replyMsg = IPC_alloc_msg( pcdContext, sizeof( pcdApiReplyMessage_t ) );
@@ -164,7 +164,7 @@ STATUS PCD_api_check_messages( void )
             {
                 PCD_PRINTF_STDERR( "Failed to allocate memory for reply message" );
                 IPC_free_msg( msg );
-                return STATUS_NOK;
+                return PCD_STATUS_NOK;
             }
             else
             {
@@ -184,7 +184,7 @@ STATUS PCD_api_check_messages( void )
             if ( !rule )
             {
                 PCD_PRINTF_WARNING_STDOUT( "Got READY event, but cannot find an associated rule to pid %d", data->pid );
-                retval = -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS;
+                retval = PCD_STATUS_INVALID_RULE;
             }
             else
             {
@@ -192,12 +192,12 @@ STATUS PCD_api_check_messages( void )
                 if ( rule->endCondition.type == PCD_END_COND_KEYWORD_PROCESS_READY )
                 {
                     rule->endCondition.processReady = True;
-                    retval = STATUS_OK;
+                    retval = PCD_STATUS_OK;
                 }
                 else
                 {
                     PCD_PRINTF_WARNING_STDOUT( "Got READY event, but rule end condition is different" );
-                    retval = -STATUS_BAD_PARAMS;
+                    retval = PCD_STATUS_BAD_PARAMS;
                 }
             }
         }
@@ -233,7 +233,7 @@ STATUS PCD_api_check_messages( void )
                         /* Send the incoming message as a cookie */
                         retval = PCD_api_stop( rule, False, ( void *)msg );
 
-                        if ( retval == STATUS_PASS_INCOMPLETE )
+                        if ( retval == PCD_STATUS_WAIT )
                         {
                             /* We don't reply now. Calling context is blocked */
                             if ( replyMsg )
@@ -257,7 +257,7 @@ STATUS PCD_api_check_messages( void )
                         break;
 
                     case PCD_API_GET_RULE_STATE:
-                        retval = STATUS_OK;
+                        retval = PCD_STATUS_OK;
 
                         switch ( rule->ruleState )
                         {
@@ -291,13 +291,13 @@ STATUS PCD_api_check_messages( void )
                                 break;
 
                             default:
-                                retval = STATUS_NOK;
+                                retval = PCD_STATUS_NOK;
                                 break;
                         }
                         break;
 
                     default:
-                        retval = -STATUS_BAD_PARAMS;
+                        retval = PCD_STATUS_BAD_PARAMS;
                         PCD_PRINTF_WARNING_STDOUT( "Invalid request %d (for rule %s_%s), aborting", data->type, data->ruleId.groupName, data->ruleId.ruleName );
                         break;
                 }
@@ -307,7 +307,7 @@ STATUS PCD_api_check_messages( void )
                 PCD_PRINTF_WARNING_STDOUT( "Rule %s_%s not found, aborting request %d", data->ruleId.groupName, data->ruleId.ruleName, data->type );
 
                 /* Rule not found */
-                retval = -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS;
+                retval = PCD_STATUS_INVALID_RULE;
             }
         }
 
@@ -317,7 +317,7 @@ STATUS PCD_api_check_messages( void )
             replyData->retval = retval;
 
             /* Send response */
-            if ( IPC_reply_msg( msg, replyMsg ) != STATUS_OK )
+            if ( IPC_reply_msg( msg, replyMsg ) != PCD_STATUS_OK )
             {
                 IPC_free_msg( replyMsg );
             }
@@ -325,17 +325,17 @@ STATUS PCD_api_check_messages( void )
         }
 
         /* Free only if completed. Don't free in sync termination */
-        if ( retval != STATUS_PASS_INCOMPLETE )
+        if ( retval != PCD_STATUS_WAIT )
         {
             /* Free incoming message */
             IPC_free_msg( msg );
         }
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-void PCD_api_reply_message( void *cookie, STATUS retval )
+void PCD_api_reply_message( void *cookie, PCD_status_e retval )
 {
     IPC_message_t *msg = cookie;
     pcdApiMessage_t *data;
@@ -351,7 +351,7 @@ void PCD_api_reply_message( void *cookie, STATUS retval )
     data = IPC_get_msg( msg );
 
     /* Check if we need to reply */
-    if ( IPC_get_msg_context( msg, &msgContext ) == STATUS_OK )
+    if ( IPC_get_msg_context( msg, &msgContext ) == PCD_STATUS_OK )
     {
         /* Allocate memory for reply message */
         replyMsg = IPC_alloc_msg( pcdContext, sizeof( pcdApiReplyMessage_t ) );
@@ -375,7 +375,7 @@ void PCD_api_reply_message( void *cookie, STATUS retval )
         replyData->retval = retval;
 
         /* Send response */
-        if ( IPC_reply_msg( msg, replyMsg ) != STATUS_OK )
+        if ( IPC_reply_msg( msg, replyMsg ) != PCD_STATUS_OK )
         {
             PCD_PRINTF_STDERR( "Failed to send termination reply message" );
             IPC_free_msg( replyMsg );

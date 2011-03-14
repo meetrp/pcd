@@ -124,11 +124,11 @@ menuconfig: pcd_title conf
 
 check_permissions:
 	@echo Checking write permission: $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)
-	@touch $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)/pcd.tmp
+	@mkdir -p $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX) && touch $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)/pcd.tmp
 	@echo Checking write permission: $(CONFIG_PCD_INSTALL_DIR_HOST)
-	@touch $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp
+	@mkdir -p $(CONFIG_PCD_INSTALL_DIR_HOST) && touch $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp
 	@echo Checking write permission: $(CONFIG_PCD_INSTALL_DIR_PREFIX)
-	@touch $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp
+	@mkdir -p $(CONFIG_PCD_INSTALL_DIR_PREFIX) && touch $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp
 
 check_config:
 	@if [ ! -f $(PCD_ROOT)/.config ]; then \
@@ -152,7 +152,9 @@ install: pcd_title check_permissions
 	@$(MAKE) -C ./pcd/src/pcdapi/src install
 	@$(MAKE) -C ./pcd/src install	
 	@$(MAKE) -C ./pcd/src/parser/src install
-	@install -p $(PCD_ROOT)/include/*.h $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)
+	@if [ "$(PCD_ROOT)/include" != "$(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX)" ]; then \
+		install -p $(PCD_ROOT)/include/*.h $(CONFIG_PCD_INSTALL_HEADERS_DIR_PREFIX) ;\
+	fi
 
 clean:
 	@$(MAKE) -C ./pcd/src clean -s

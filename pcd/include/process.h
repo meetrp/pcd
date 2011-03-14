@@ -86,9 +86,9 @@ typedef struct procObj_t
     pid_t           pid;
     procState_e     state;
     procExit_e      retstat;
-    Int32           retcode;
-    Uint32          tm;
-    Bool            signaled;
+    int32_t           retcode;
+    u_int32_t          tm;
+    bool_t            signaled;
     void            *cookie;
 
     struct procObj_t *prev;
@@ -104,49 +104,49 @@ typedef struct procObj_t
  *  \brief          Module's init function
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_process_init( void );
+PCD_status_e PCD_process_init( void );
 
 /*! \fn             PCD_process_enqueue
  *  \brief          Enqueue a process
  *  \param[in]      Rule
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_process_enqueue( rule_t *rule );
+PCD_status_e PCD_process_enqueue( rule_t *rule );
 
 /*! \fn             PCD_process_stop
  *  \brief          Stop a process
  *  \param[in]      Rule, Brutal; True to kill, cookie; caller message
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_process_stop( rule_t *rule, Bool brutal, void *cookie );
+PCD_status_e PCD_process_stop( rule_t *rule, bool_t brutal, void *cookie );
 
 /*! \fn             PCD_process_iterate_start
  *  \brief          Start iteration function
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_process_iterate_start( void );
+PCD_status_e PCD_process_iterate_start( void );
 
 /*! \fn             PCD_process_iterate_stop
  *  \brief          Stop iteration function
  *  \param[in]      None
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_process_iterate_stop( void );
+PCD_status_e PCD_process_iterate_stop( void );
 
 /*! \fn             PCD_process_signal_by_rule
  *  \brief          Signal a process, find it by its rule
  *  \param[in]      Rule, Signal
  *  \param[in,out]  None
- *  \return         STATUS_OK - Success, Otherwise - Error
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_process_signal_by_rule( rule_t *rule, int sig );
+PCD_status_e PCD_process_signal_by_rule( rule_t *rule, int sig );
 
 /*! \fn             PCD_process_get_rule_by_pid
  *  \brief          Get rule by its process ID

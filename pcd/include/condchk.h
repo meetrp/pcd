@@ -50,7 +50,7 @@ struct rule_t;
 /**************************************************************************/
 /*      INTERFACE TYPES and STRUCT Definitions                            */
 /**************************************************************************/
-typedef STATUS (*condCheckFunc)( struct rule_t *rule );
+typedef PCD_status_e (*condCheckFunc)( struct rule_t *rule );
 
 #define PCD_COND_MAX_SIZE   32
 
@@ -83,7 +83,7 @@ typedef enum startCond_e
 #define PCD_START_COND_FUNCTION(x)   PCD_start_cond_check_##x
 
 #define PCD_START_COND_KEYWORD( keyword ) \
-    STATUS PCD_START_COND_FUNCTION( keyword )( struct rule_t *);
+    PCD_status_e PCD_START_COND_FUNCTION( keyword )( struct rule_t *);
 
 /* Function prototypes */
 PCD_START_COND_KEYWORDS
@@ -120,7 +120,7 @@ typedef enum endCond_e
 #define PCD_END_COND_FUNCTION(x)   PCD_end_cond_check_##x
 
 #define PCD_END_COND_KEYWORD( keyword ) \
-    STATUS PCD_END_COND_FUNCTION( keyword )( struct rule_t *);
+    PCD_status_e PCD_END_COND_FUNCTION( keyword )( struct rule_t *);
 
 /* Function prototypes */
 PCD_END_COND_KEYWORDS
@@ -134,8 +134,8 @@ PCD_END_COND_KEYWORDS
  */
 typedef struct envVar_t
 {
-    Char    envVarName[ PCD_COND_MAX_SIZE ];
-    Char    envVarValue[ PCD_COND_MAX_SIZE ];
+    char    envVarName[ PCD_COND_MAX_SIZE ];
+    char    envVarValue[ PCD_COND_MAX_SIZE ];
 
 } envVar_t;
 
@@ -159,10 +159,10 @@ typedef struct startCond_t
     startCond_e type;
     union
     {
-        Char        filename[ PCD_COND_MAX_SIZE ];
+        char        filename[ PCD_COND_MAX_SIZE ];
         ruleCache_t ruleCompleted[ PCD_START_COND_MAX_IDS ];
-        Char        netDevice[ IFNAMSIZ ];
-        Uint32      ipcOwner;
+        char        netDevice[ IF_NAMESIZE ];
+        u_int32_t   ipcOwner;
         envVar_t    envVar;
     };
 
@@ -176,13 +176,13 @@ typedef struct endCond_t
     endCond_e type;
     union
     {
-    Char    filename[ PCD_COND_MAX_SIZE ];
-    Uint32  delay[2];
-    Char    netDevice[ PCD_COND_MAX_SIZE ];
-    Uint32  ipcOwner;
-    Uint32  exitStatus;
-    Uint32  signal;
-    Bool    processReady;
+    char    filename[ PCD_COND_MAX_SIZE ];
+    u_int32_t  delay[2];
+    char    netDevice[ IF_NAMESIZE ];
+    u_int32_t  ipcOwner;
+    u_int32_t  exitStatus;
+    u_int32_t  signal;
+    bool_t    processReady;
     };
 
 } endCond_t;

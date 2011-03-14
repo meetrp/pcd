@@ -46,33 +46,33 @@
 #define MAX_FILENAME_LEN      255
 #define MAX_GROUPS            16
 
-static Char groupName[ MAX_GROUPS ][ 32 ];
+static char groupName[ MAX_GROUPS ][ 32 ];
 
-/*! \fn STATUS PCD_output_header_create_file
+/*! \fn PCD_status_e PCD_output_header_create_file
  *  \brief open header file
  *  \param[in] headerFilename, headerHandle.
  *  \param[out] graphHandle.
  *  \return OK or error status.
  */
-STATUS PCD_output_header_create_file( const Char *headerFilename, void **headerHandle )
+PCD_status_e PCD_output_header_create_file( const char *headerFilename, void **headerHandle )
 {
-    Char header[ MAX_FILENAME_LEN ];
-    Char *ptr, *last;
-    Uint32 i;
+    char header[ MAX_FILENAME_LEN ];
+    char *ptr, *last;
+    u_int32_t i;
     FILE *myHeaderHandle;
 
     myHeaderHandle = fopen( headerFilename, "w" );
 
     if ( !myHeaderHandle )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     *headerHandle = myHeaderHandle;
     memset( groupName, 0, sizeof( groupName ) );
 
     /* Generate header headerHandle */
-    ptr = ( Char *)headerFilename;
+    ptr = ( char *)headerFilename;
 
     do
     {
@@ -116,23 +116,23 @@ STATUS PCD_output_header_create_file( const Char *headerFilename, void **headerH
     fprintf( myHeaderHandle, "#define %s\n\n", header );
     fprintf( myHeaderHandle, "#include \"pcdapi.h\"\n\n" );
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-/*! \fn STATUS PCD_output_header_close_file
+/*! \fn PCD_status_e PCD_output_header_close_file
  *  \brief close header file
  *  \param[in] headerFilename, headerHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_output_header_close_file( const Char *headerFilename, const void *headerHandle )
+PCD_status_e PCD_output_header_close_file( const char *headerFilename, const void *headerHandle )
 {
-    Uint32 i = 0;
+    u_int32_t i = 0;
     FILE *myHeaderHandle;
 
     if ( !headerHandle )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     myHeaderHandle = (FILE *)headerHandle;
@@ -153,28 +153,28 @@ STATUS PCD_output_header_close_file( const Char *headerFilename, const void *hea
     if ( fclose(myHeaderHandle) < 0 )
     {
         PCD_PRINTF_STDERR( "Failed to close output file %s", headerFilename );
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     PCD_PRINTF_STDOUT( "Generated output file %s", headerFilename );
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-/*! \fn STATUS PCD_output_header_update_file
+/*! \fn PCD_status_e PCD_output_header_update_file
  *  \brief Add a new item in graph
  *  \param[in] rule, headerHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_output_header_update_file( rule_t *newrule, const void *headerHandle )
+PCD_status_e PCD_output_header_update_file( rule_t *newrule, const void *headerHandle )
 {
-    Uint32 i = 0;
-    Bool found = False;
+    u_int32_t i = 0;
+    bool_t found = False;
     FILE *myHeaderHandle;
 
     if ( !headerHandle )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     myHeaderHandle = (FILE *)headerHandle;
@@ -203,6 +203,6 @@ STATUS PCD_output_header_update_file( rule_t *newrule, const void *headerHandle 
     /* Write the rule */
     fprintf( myHeaderHandle, "#define %s_PCD_RULE_%s\t\"%s\"\n", newrule->ruleId.groupName, newrule->ruleId.ruleName, newrule->ruleId.ruleName );
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 

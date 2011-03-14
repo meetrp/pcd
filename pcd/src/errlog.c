@@ -47,14 +47,14 @@
 
 #define PCD_ERRLOG_MIN_FREE_SIZE        ( ( PCD_ERRLOG_MAX_FILE_SIZE * 3 ) / 4 )
 
-static Int32 fd = -1;
-static Char *logFilename = NULL;
+static int32_t fd = -1;
+static char *logFilename = NULL;
 
-STATUS PCD_errlog_init( Char *logFile )
+PCD_status_e PCD_errlog_init( char *logFile )
 {
     if ( !logFile )
     {
-        return -STATUS_BAD_PARAMS;
+        return PCD_STATUS_BAD_PARAMS;
     }
 
     /* Allocate memory for filename */
@@ -62,7 +62,7 @@ STATUS PCD_errlog_init( Char *logFile )
 
     if ( !logFilename )
     {
-        return STATUS_ERROR;
+        return PCD_STATUS_NOK;
     }
 
     /* Save filename locally */
@@ -70,10 +70,10 @@ STATUS PCD_errlog_init( Char *logFile )
 
     PCD_DEBUG_PRINTF( "Error log filename: %s", logFilename );
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-static STATUS PCD_errlog_open_file( void )
+static PCD_status_e PCD_errlog_open_file( void )
 {
     off_t off;
 
@@ -81,7 +81,7 @@ static STATUS PCD_errlog_open_file( void )
     if ( ( fd = open( logFilename, O_WRONLY | O_NONBLOCK | O_APPEND | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG ) ) < 0 )
     {
         PCD_DEBUG_PRINTF( "Open log file failed: %s", logFilename );
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Get current file size */
@@ -90,27 +90,27 @@ static STATUS PCD_errlog_open_file( void )
     if ( off < 0 )
     {
         PCD_DEBUG_PRINTF( "lseek 1 log file failed: %s", logFilename );
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Check if we are over the limit */
     if ( off >= PCD_ERRLOG_MAX_FILE_SIZE )
     {
-        Char tempBuffer[ PCD_ERRLOG_MAX_FILE_SIZE ];
+        char tempBuffer[ PCD_ERRLOG_MAX_FILE_SIZE ];
         ssize_t bytes;
 
         close(fd);
         if ( ( fd = open( logFilename, O_RDWR | O_NONBLOCK | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG ) ) < 0 )
         {
             PCD_DEBUG_PRINTF( "Open log file failed: %s", logFilename );
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
 
         /* Move past oldest 25% of the file */
         if ( ( off = lseek( fd, PCD_ERRLOG_MAX_FILE_SIZE - PCD_ERRLOG_MIN_FREE_SIZE, SEEK_SET ) ) < 0 )
         {
             PCD_DEBUG_PRINTF( "lseek 2 log file failed: %s", logFilename );
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
 
         /* Read newest 75% of the file */
@@ -129,7 +129,7 @@ static STATUS PCD_errlog_open_file( void )
 				if ( ( off = lseek( fd, 0, SEEK_SET ) ) < 0 )
 				{
 					PCD_DEBUG_PRINTF( "lseek 2 log file failed: %s", logFilename );
-					return STATUS_NOK;
+					return PCD_STATUS_NOK;
 				}
 
 				/* Write the data in the start of the file */
@@ -148,14 +148,14 @@ static STATUS PCD_errlog_open_file( void )
         if ( ( fd = open( logFilename, O_WRONLY | O_NONBLOCK | O_APPEND | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG ) ) < 0 )
         {
             PCD_DEBUG_PRINTF( "Open log file failed: %s", logFilename );
-            return STATUS_NOK;
+            return PCD_STATUS_NOK;
         }
 
     }
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-static STATUS PCD_errlog_close_file( void )
+static PCD_status_e PCD_errlog_close_file( void )
 {
     if ( fd > 0 )
     {
@@ -164,10 +164,10 @@ static STATUS PCD_errlog_close_file( void )
         fd = -1;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_errlog_close( void )
+PCD_status_e PCD_errlog_close( void )
 {
     PCD_errlog_close_file();
 
@@ -177,12 +177,12 @@ STATUS PCD_errlog_close( void )
         logFilename = NULL;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-void PCD_errlog_log( Char *buffer, Bool timeStamp )
+void PCD_errlog_log( char *buffer, bool_t timeStamp )
 {
-    Char *timeBuf = NULL;
+    char *timeBuf = NULL;
     struct timeval time;
 
     if ( !logFilename )
@@ -192,7 +192,7 @@ void PCD_errlog_log( Char *buffer, Bool timeStamp )
     }
 
     /* Open file for writing */
-    if ( PCD_errlog_open_file() != STATUS_OK )
+    if ( PCD_errlog_open_file() != PCD_STATUS_OK )
     {
         PCD_DEBUG_PRINTF( "Cannot open log file: %s", logFilename );
         return;
@@ -205,7 +205,7 @@ void PCD_errlog_log( Char *buffer, Bool timeStamp )
 
         if ( ( timeBuf = ctime( &time.tv_sec ) ) != NULL )
         {
-            Uint32 len = strlen( timeBuf );
+            u_int32_t len = strlen( timeBuf );
 
             timeBuf[ len - 1 ] = ' ';
             if( write( fd, timeBuf, len ) <= 0 )

@@ -60,7 +60,7 @@
 /**************************************************************************/
 /*      LOCAL DEFINITIONS AND VARIABLES                                   */
 /**************************************************************************/
-extern Int32 errno;
+extern int32_t errno;
 
 procObj_t *procList = NULL;
 
@@ -107,7 +107,7 @@ static void PCD_process_free( procObj_t *ptr );
 static procObj_t *PCD_process_spawn(procObj_t *proc);
 static procObj_t *PCD_process_new( rule_t *rule );
 static void PCD_process_free( procObj_t *ptr );
-static STATUS PCD_process_trigger_action( rule_t *rule );
+static PCD_status_e PCD_process_trigger_action( rule_t *rule );
 
 char *strsignal( int );
 
@@ -118,25 +118,26 @@ char *strsignal( int );
 
 static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
 {
-    const Char msg2[]= "pcd: Terminating PCD, rebooting system...\n";
+    const char msg2[]= "pcd: Terminating PCD, rebooting system...\n";
+    int32_t i;
 
     /* In case the PCD is terminated, reboot the system. */
     if ( signo != SIGTERM )
     {
-        const Char msg1[]= "pcd: Caught fault signal.\n";
+        const char msg1[]= "pcd: Caught fault signal.\n";
         exception_t exception;
-        Int32 fd;
-        Int32 i;
+        int32_t fd;
 
-/* ARM registers */ /* X86 processor context */ /* MIPS registers */
-#if defined(CONFIG_PCD_PLATFORM_ARM) || defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
+    /* Get platform specific registers */
+#if defined(CONFIG_PCD_PLATFORM_ARM) || defined(CONFIG_PCD_PLATFORM_X86) \
+    || defined(CONFIG_PCD_PLATFORM_MIPS) || defined(CONFIG_PCD_PLATFORM_X64)
         ucontext_t *ctx = (ucontext_t *)context;
 #endif
-        Char *procName = "pcd";
-        const Char msg3[]= "pcd: Wrote exception information.\n";
+        char *procName = "pcd";
+        const char msg3[]= "pcd: Wrote exception information.\n";
 
         /* Display an error message */
-        write( STDERR_FILENO, msg1, sizeof(msg1) );
+        i = write( STDERR_FILENO, msg1, sizeof(msg1) );
 
         /* Prepare a self exception file in case the PCD has crashed (Could never happen :-)) */
         exception.magic = PCD_EXCEPTION_MAGIC;
@@ -160,24 +161,28 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
         exception.regs = ctx->uc_mcontext;
 #endif
 
-/* X86 processor context */ /* MIPS registers */
+        /* X86 processor context */ /* MIPS registers */
 #if defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
         exception.uc_mctx = ctx->uc_mcontext; 
 #endif
+        /* X64 registers */
+#if defined(CONFIG_PCD_PLATFORM_X64)
+        exception.uc_mcontext = ctx->uc_mcontext; 
+#endif
         /* Open the self exception file */
-        fd = open( CONFIG_PCD_PROCESS_SELF_EXCEPTION_DIRECTORY "/" CONFIG_PCD_PROCESS_SELF_EXCEPTION_FILE, O_CREAT | O_WRONLY | O_SYNC );
+        fd = open( CONFIG_PCD_PROCESS_SELF_EXCEPTION_DIRECTORY "/" CONFIG_PCD_PROCESS_SELF_EXCEPTION_FILE, O_CREAT | O_WRONLY | O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP );
 
         if ( fd > 0 )
         {
             /* Write information for debug */
-            write( fd, &exception, sizeof( exception ) );
+            i = write( fd, &exception, sizeof( exception ) );
             close(fd);
-            write( STDERR_FILENO, msg3, sizeof( msg3) );
+            i = write( STDERR_FILENO, msg3, sizeof( msg3) );
         }
     }
 
     /* Display reboot message */
-    write( STDERR_FILENO, msg2, sizeof(msg2) );
+    i = write( STDERR_FILENO, msg2, sizeof(msg2) );
 
     /* Stop PCD timer */
     PCD_timer_stop();
@@ -188,7 +193,7 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
     /* Close exception file */
     PCD_exception_close();
 
-    /* Reboot, let init kill on the child processes */
+    /* Kill all the child processes and reboot */
     PCD_process_reboot();
 
     exit(1);
@@ -245,7 +250,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
     int i;
     char *args[PCD_PROCESS_MAX_PARAMS+3];
     procObj_t *next;
-    Char params[ CONFIG_PCD_MAX_PARAM_SIZE ] = { 0};
+    char params[ CONFIG_PCD_MAX_PARAM_SIZE ] = { 0};
     rule_t *rule;
 
     /* Check validity of parameters */
@@ -266,9 +271,9 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
 
     if ( !pid )
     {
-        Char *token;
-        Char vars[ CONFIG_PCD_MAX_PARAM_SIZE ];
-        Uint32 varsIdx = 0;
+        char *token;
+        char vars[ CONFIG_PCD_MAX_PARAM_SIZE ];
+        u_int32_t varsIdx = 0;
 
         /* Setup executable name */
         args[0] = args[1] = rule->command;
@@ -299,18 +304,18 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
         /* Setup parameters */
         while ( ( token != NULL ) && ( i < PCD_PROCESS_MAX_PARAMS ) )
         {
-            Char *ptr;
-            Char *p_var = NULL;
+            char *ptr;
+            char *p_var = NULL;
 
             /* Check if we have an environment variable in the parameters list */
             ptr = strchr( token, '$' );
 
             if ( ptr )
             {
-                Char *env = NULL;
-                Char *var;
-                Char buff[ CONFIG_PCD_MAX_PARAM_SIZE ];
-                Char var_name[ 64 ];
+                char *env = NULL;
+                char *var;
+                char buff[ CONFIG_PCD_MAX_PARAM_SIZE ];
+                char var_name[ 64 ];
 
                 if( ( *(ptr + 1) ) == '{' )
                 {
@@ -318,7 +323,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
 
                 	if( p_var )
                 	{
-                    	Uint32 val = p_var - ( ptr + 2 );
+                    	u_int32_t val = p_var - ( ptr + 2 );
 
                 		memset( var_name, 0, sizeof( var_name ) );
                     	if( val >= sizeof( var_name ) )
@@ -330,8 +335,8 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
 
                 /* Get the variable value from CONFIG_PCD_TEMP_PATH */
                 {
-                    Int32 fd;
-                    Char filename[ 255 ];
+                    int32_t fd;
+                    char filename[ 255 ];
 
                     sprintf( filename, CONFIG_PCD_TEMP_PATH "/%s", var_name );
 
@@ -443,9 +448,9 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
 
                 if ( token )
                 {
-                    Int32 fd;
+                    int32_t fd;
 
-                    fd = open( token, O_WRONLY | O_CREAT);
+                    fd = open( token, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP );
                     dup2(fd, 1); // redirect output to the file
                     close(fd);
                 }
@@ -557,18 +562,18 @@ static procObj_t *PCD_process_find_by_state(procObj_t *p, procState_e state)
     return 0;
 }
 
-STATUS PCD_process_enqueue( rule_t *rule )
+PCD_status_e PCD_process_enqueue( rule_t *rule )
 {
     procObj_t *newProc;
 
     if ( !rule )
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
 
     /* Check if we already have a running process associated with this rule */
     if ( rule->proc )
     {
         PCD_PRINTF_WARNING_STDOUT( "Cannot start process, process %s (%d) already running (Rule %s_%s)", rule->command, rule->proc->pid, rule->ruleId.groupName, rule->ruleId.ruleName );
-        return -STATUS_ERROR_OPERATION_NOT_PERMITTED;
+        return PCD_STATUS_INVALID_RULE;
     }
 
     /* Allocate and init new process object */
@@ -577,25 +582,25 @@ STATUS PCD_process_enqueue( rule_t *rule )
     if ( !newProc )
     {
         PCD_PRINTF_STDERR( "Failed to allocate memory for new process (Rule %s_%s)", rule->ruleId.groupName, rule->ruleId.ruleName );
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     NODE_ADD( procList, newProc );
     rule->proc = newProc;
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_process_stop( rule_t *rule, Bool brutal, void *cookie )
+PCD_status_e PCD_process_stop( rule_t *rule, bool_t brutal, void *cookie )
 {
     procObj_t *proc;
 
     if ( !rule )
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
 
     if ( !rule->proc )
     {
         PCD_PRINTF_WARNING_STDOUT( "Cannot stop process, no process is associated with rule %s_%s", rule->ruleId.groupName, rule->ruleId.ruleName );
-        return -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS;
+        return PCD_STATUS_INVALID_RULE;
     }
     else
     {
@@ -613,7 +618,7 @@ STATUS PCD_process_stop( rule_t *rule, Bool brutal, void *cookie )
         if ( ( proc->state != PCD_PROCESS_STARTING ) && ( proc->state != PCD_PROCESS_RUNNING ) && ( proc->state != PCD_PROCESS_RUNME ) )
         {
             PCD_PRINTF_WARNING_STDOUT( "Cannot stop process, process %s is not running (Rule %s_%s)", rule->command, rule->ruleId.groupName, rule->ruleId.ruleName );
-            return -STATUS_ERROR_OPERATION_NOT_PERMITTED;
+            return PCD_STATUS_INVALID_RULE;
         }
     }
 
@@ -635,12 +640,12 @@ STATUS PCD_process_stop( rule_t *rule, Bool brutal, void *cookie )
     /* Disconnect the rule from this process */
     rule->proc = NULL;
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_process_init( void )
+PCD_status_e PCD_process_init( void )
 {
-    Int32 i;
+    int32_t i;
     struct sigaction sa;
 
     /* Ignore all signals! */
@@ -658,11 +663,11 @@ STATUS PCD_process_init( void )
     SETSIGINFO(sa, SIGBUS,  PCD_process_terminate);
     SETSIGINFO(sa, SIGQUIT, PCD_process_terminate);
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_process_iterate_start( void )
+PCD_status_e PCD_process_iterate_start( void )
 {
     procObj_t *p;
 
@@ -696,10 +701,10 @@ STATUS PCD_process_iterate_start( void )
     }
 
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_process_iterate_stop( void )
+PCD_status_e PCD_process_iterate_stop( void )
 {
     procObj_t *p;
     procObj_t *next;
@@ -736,7 +741,7 @@ STATUS PCD_process_iterate_stop( void )
                                 if ( rule->daemon == True )
                                 {
                                     PCD_PRINTF_STDERR( "Process %s (%d) exited unexpectedly (Rule %s_%s)", rule->command, p->pid, rule->ruleId.groupName, rule->ruleId.ruleName );
-                                    if ( PCD_process_trigger_action( rule ) != STATUS_OK )
+                                    if ( PCD_process_trigger_action( rule ) != PCD_STATUS_OK )
                                     {
                                         /* Try again next iteration */
                                         continue;
@@ -744,7 +749,7 @@ STATUS PCD_process_iterate_stop( void )
                                 }
                                 else
                                 {
-                                    Bool trigger = False;
+                                    bool_t trigger = False;
 
                                     if ( rule->endCondition.type == PCD_END_COND_KEYWORD_EXIT )
                                     {
@@ -767,7 +772,7 @@ STATUS PCD_process_iterate_stop( void )
                                         PCD_PRINTF_STDERR( "Process %s (%d) exited with result code %d (Rule %s_%s)", rule->command, p->pid, p->retcode, rule->ruleId.groupName, rule->ruleId.ruleName );
 
                                         /* Trigger failure action */
-                                        if ( PCD_process_trigger_action( rule ) != STATUS_OK )
+                                        if ( PCD_process_trigger_action( rule ) != PCD_STATUS_OK )
                                         {
                                             /* Try again next iteration */
                                             continue;
@@ -779,7 +784,7 @@ STATUS PCD_process_iterate_stop( void )
                             {
                                 if ( p->cookie )
                                 {
-                                    PCD_api_reply_message( p->cookie, STATUS_OK );
+                                    PCD_api_reply_message( p->cookie, PCD_STATUS_OK );
                                 }
                             }
                             break;
@@ -791,7 +796,7 @@ STATUS PCD_process_iterate_stop( void )
                                 if ( rule->daemon == True )
                                 {
                                     PCD_PRINTF_STDERR( "Unhandled exception %d (%s) in process %s (%d) (Rule %s_%s)", p->retcode, strsignal( p->retcode ), rule->command, p->pid, rule->ruleId.groupName, rule->ruleId.ruleName );
-                                    if ( PCD_process_trigger_action( rule ) != STATUS_OK )
+                                    if ( PCD_process_trigger_action( rule ) != PCD_STATUS_OK )
                                     {
                                         /* Try again next iteration */
                                         continue;
@@ -802,14 +807,14 @@ STATUS PCD_process_iterate_stop( void )
                             {
                                 if ( p->cookie )
                                 {
-                                    PCD_api_reply_message( p->cookie, STATUS_OK );
+                                    PCD_api_reply_message( p->cookie, PCD_STATUS_OK );
                                 }
                             }
                             break;
 
                         case PCD_PROCESS_RETSTOPPED:
                             PCD_PRINTF_STDERR( "Exception %d (%s) caused process %s (%d) to stop (Rule %s_%s)", p->retcode, strsignal( p->retcode ), rule->command, p->pid, rule->ruleId.groupName, rule->ruleId.ruleName );
-                            if ( PCD_process_trigger_action( rule ) != STATUS_OK )
+                            if ( PCD_process_trigger_action( rule ) != PCD_STATUS_OK )
                             {
                                 /* Try again next iteration */
                                 continue;
@@ -889,17 +894,17 @@ STATUS PCD_process_iterate_stop( void )
         p = p->next;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-STATUS PCD_process_signal_by_rule( rule_t *rule, int sig )
+PCD_status_e PCD_process_signal_by_rule( rule_t *rule, int sig )
 {
     procObj_t *proc;
 
     if ( !rule )
     {
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     proc = rule->proc;
@@ -907,7 +912,7 @@ STATUS PCD_process_signal_by_rule( rule_t *rule, int sig )
     if ( !proc )
     {
         PCD_PRINTF_WARNING_STDOUT( "Cannot signal process, process %s is not running (Rule %s_%s)", rule->command, rule->ruleId.groupName, rule->ruleId.ruleName );
-        return -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS;
+        return PCD_STATUS_INVALID_RULE;
     }
 
     /* Allow to signal only processes which are actually running */
@@ -919,17 +924,17 @@ STATUS PCD_process_signal_by_rule( rule_t *rule, int sig )
     else
     {
         PCD_PRINTF_WARNING_STDOUT( "Cannot signal process, process %s is not running (Rule %s_%s)", rule->command, rule->ruleId.groupName, rule->ruleId.ruleName );
-        return -STATUS_ERROR_OPERATION_NOT_PERMITTED;
+        return PCD_STATUS_INVALID_RULE;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 
-static STATUS PCD_process_trigger_action( rule_t *rule )
+static PCD_status_e PCD_process_trigger_action( rule_t *rule )
 {
     rule_t *tmpRule;
-    STATUS retval;
+    PCD_status_e retval;
 
     /* Dequeue the rule from the timer queue, we are triggering failure action now. */
     PCD_timer_dequeue_rule( rule, True );
@@ -946,7 +951,7 @@ static STATUS PCD_process_trigger_action( rule_t *rule )
         }
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 rule_t *PCD_process_get_rule_by_pid( pid_t pid )
@@ -971,15 +976,19 @@ void PCD_process_reboot( void )
 {
     if ( debugMode == False )
     {
-        /* Terminate init */
+        /* Terminate all monitored processes */
+        kill( 0, SIGTERM );
+
+		/* Terminate init, reboot the system */
         kill( 1, SIGTERM );
     }
     else
     {
-        const Char msg[]= "pcd: Reboot disabled in debug mode, exiting.\n";
-
+        const char msg[]= "pcd: Reboot disabled in debug mode, exiting.\n";
+        int32_t i;
+		
         /* Display reboot message */
-        write( STDERR_FILENO, msg, sizeof(msg) );
+        i = write( STDERR_FILENO, msg, sizeof(msg) );
 
         /* Exit abnormally */
         exit( 1 );

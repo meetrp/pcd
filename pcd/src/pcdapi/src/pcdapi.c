@@ -64,14 +64,14 @@
  */
 #define PCD_API_REPLY_TIMEOUT     5000
 
-static Bool pcdApiInitDone = False;
+static bool_t pcdApiInitDone = False;
 
-static Char procName[ PCD_EXCEPTION_MAX_PROCESS_NAME ];
+static char procName[ PCD_EXCEPTION_MAX_PROCESS_NAME ];
 static Cleanup_func cleanupFunc = NULL;
-static Char mapsFile[ 18 ];
-static Char mapsTmpFile[ 22 ];
+static char mapsFile[ 18 ];
+static char mapsTmpFile[ 22 ];
 
-static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *context);
+static void PCD_exception_default_handler(int32_t signo, siginfo_t *info, void *context);
 
 #define SETSIG(sa, sig, func) \
     {    memset( &sa, 0, sizeof( struct sigaction ) ); \
@@ -90,17 +90,17 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
 /*  \brief 		Allocate and send an IPC message                       *
  *  \param[in] 		ruleId, type, optional parameters, pid 			*
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e type, void *ptr, Int32 value )
+static PCD_status_e PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e type, void *ptr, int32_t value )
 {
     IPC_message_t *msg;
     IPC_context_t pcdCtx, pcdTmpCtx;
     IPC_timeout_e timeout = PCD_API_REPLY_TIMEOUT;
     pcdApiMessage_t *data;
-    STATUS retval = STATUS_OK;
-    Uint32 msgId;
-    Char pcdClient[ 32 ];
+    PCD_status_e retval = PCD_STATUS_OK;
+    u_int32_t msgId;
+    char pcdClient[ 32 ];
 
     if ( !pcdApiInitDone )
     {
@@ -108,16 +108,16 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
         pcdApiInitDone = True;
     }
 
-    if ( IPC_get_context_by_owner( &pcdCtx, CONFIG_PCD_OWNER_ID ) != STATUS_OK )
-        return -STATUS_ERROR_NO_SUCH_DEVICE_OR_ADDRESS;
+    if ( IPC_get_context_by_owner( &pcdCtx, CONFIG_PCD_OWNER_ID ) != PCD_STATUS_OK )
+        return PCD_STATUS_INVALID_RULE;
 
     sprintf( pcdClient, CONFIG_PCD_CLIENTS_NAME_PREFIX "%d", getpid() );
 
     /* Create temporary destination point */
-    if ( IPC_start( pcdClient, &pcdTmpCtx, 0) != STATUS_OK )
+    if ( IPC_start( pcdClient, &pcdTmpCtx, 0) != PCD_STATUS_OK )
     {
         printf( "PCD API: Failed to start IPC.\n");
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
     /* Allocate a message */
@@ -126,7 +126,7 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
     if ( !msg )
     {
         printf( "PCD API: Failed to allocate memory.\n" );
-        retval = STATUS_NOK;
+        retval = PCD_STATUS_NOK;
 
         goto end_malloc_and_send;
     }
@@ -134,7 +134,7 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
     data = IPC_get_msg( msg );
 
     /* Generate a message ID using an uninitialized data[0] */
-    msgId = *(Uint32 *)( data ) - (Uint32)(pcdTmpCtx);
+    msgId = *(u_int32_t *)( data ) - (u_int32_t)(pcdTmpCtx);
 
     /* Clear data */
     memset( data, 0, sizeof( pcdApiMessage_t ) );
@@ -150,7 +150,7 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
         {
             printf( "PCD API: Invalid rule ID.\n" );
             IPC_free_msg( msg );
-            retval = STATUS_NOK;
+            retval = PCD_STATUS_NOK;
 
             goto end_malloc_and_send;
         }
@@ -169,7 +169,7 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
             if ( ptr )
             {
                 /* Copy optional parameters to activate the rule differently */
-                strncpy( data->params, ( Char *)ptr, CONFIG_PCD_MAX_PARAM_SIZE - 1 );
+                strncpy( data->params, ( char *)ptr, CONFIG_PCD_MAX_PARAM_SIZE - 1 );
             }
             break;
 
@@ -194,11 +194,11 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
 
         default:
             IPC_free_msg( msg );
-            retval = -STATUS_BAD_PARAMS;
+            retval = PCD_STATUS_BAD_PARAMS;
             goto end_malloc_and_send;
     }
 
-    /* Send the requst to the PCD */
+    /* Send the request to the PCD */
     if ( IPC_send_msg( pcdCtx, msg ) == 0 )
     {
         IPC_message_t *replyMsg;
@@ -236,8 +236,8 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
             }
             else
             {
-                /* Return with status error, don't dispose message */
-                retval = -STATUS_ERROR;
+                /* Return with status timeout, don't dispose message */
+                retval = PCD_STATUS_TIMEOUT;
                 break;
             }
 
@@ -245,7 +245,7 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
     }
     else
     {
-        retval = -STATUS_ERROR;
+        retval = PCD_STATUS_NOK;
         IPC_free_msg( msg );
     }
 
@@ -263,9 +263,9 @@ static STATUS PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdApi_e t
 /*  \brief 		Start a process associated with a rule				*
  *  \param[in] 		ruleId, optional parameters				     *
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_start_process( const struct ruleId_t *ruleId, const Char *optionalParams )
+PCD_status_e PCD_api_start_process( const struct ruleId_t *ruleId, const char *optionalParams )
 {
     return PCD_api_malloc_and_send( ruleId, PCD_API_START_PROCESS, ( void *)optionalParams, -1 );
 }
@@ -276,9 +276,9 @@ STATUS PCD_api_start_process( const struct ruleId_t *ruleId, const Char *optiona
 /*  \brief 		Signal a process associated with a rule				*
  *  \param[in] 		ruleId, signal id				     *
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_signal_process( const struct ruleId_t *ruleId, Int32 sig )
+PCD_status_e PCD_api_signal_process( const struct ruleId_t *ruleId, int32_t sig )
 {
     return PCD_api_malloc_and_send( ruleId, PCD_API_SIGNAL_PROCESS, NULL, sig );
 }
@@ -289,9 +289,9 @@ STATUS PCD_api_signal_process( const struct ruleId_t *ruleId, Int32 sig )
 /*  \brief 		Terminate a process associated with a rule  			*
  *  \param[in] 		ruleId								     *
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_terminate_process( const struct ruleId_t *ruleId )
+PCD_status_e PCD_api_terminate_process( const struct ruleId_t *ruleId )
 {
     return PCD_api_malloc_and_send( ruleId, PCD_API_TERMINATE_PROCESS_SYNC, NULL, -1 );
 }
@@ -302,9 +302,9 @@ STATUS PCD_api_terminate_process( const struct ruleId_t *ruleId )
 /*  \brief 		Terminate a process associated with a rule  			*
  *  \param[in] 		ruleId								     *
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_terminate_process_non_blocking( const struct ruleId_t *ruleId )
+PCD_status_e PCD_api_terminate_process_non_blocking( const struct ruleId_t *ruleId )
 {
     return PCD_api_malloc_and_send( ruleId, PCD_API_TERMINATE_PROCESS, NULL, -1 );
 }
@@ -315,9 +315,9 @@ STATUS PCD_api_terminate_process_non_blocking( const struct ruleId_t *ruleId )
 /*  \brief 		Kill a process associated with a rule				*
  *  \param[in] 		ruleId								     *
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_kill_process( const struct ruleId_t *ruleId )
+PCD_status_e PCD_api_kill_process( const struct ruleId_t *ruleId )
 {
     return PCD_api_malloc_and_send( ruleId, PCD_API_KILL_PROCESS, NULL, -1 );
 }
@@ -328,9 +328,9 @@ STATUS PCD_api_kill_process( const struct ruleId_t *ruleId )
 /*  \brief 		Send PROCESS_READY event to PCD                        *
  *  \param[in] 		None
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_send_process_ready( void )
+PCD_status_e PCD_api_send_process_ready( void )
 {
     return PCD_api_malloc_and_send( NULL, PCD_API_PROCESS_READY, NULL, getpid() );
 }
@@ -341,13 +341,13 @@ STATUS PCD_api_send_process_ready( void )
 /*  \brief 		Get rule state				*
  *  \param[in] 		ruleId                      				     *
  *  \param[in,out] 	ruleState, see pcdApiRuleState_e                    *
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_get_rule_state( const struct ruleId_t *ruleId, pcdApiRuleState_e *ruleState )
+PCD_status_e PCD_api_get_rule_state( const struct ruleId_t *ruleId, pcdApiRuleState_e *ruleState )
 {
     if ( !ruleState )
     {
-        return -STATUS_BAD_PARAMS;
+        return PCD_STATUS_BAD_PARAMS;
     }
 
     return PCD_api_malloc_and_send( ruleId, PCD_API_GET_RULE_STATE, ( void *)ruleState, -1 );
@@ -359,15 +359,15 @@ STATUS PCD_api_get_rule_state( const struct ruleId_t *ruleId, pcdApiRuleState_e 
 /*  \brief 		Register default PCD exception handler                 *
  *  \param[in] 		argv[0]       								*
  *  \param[in,out] 	None										*
- *  \return			STATUS_OK - Success, <0 - Error	               *
+ *  \return			PCD_STATUS_OK - Success, <0 - Error	               *
  **************************************************************************/
-STATUS PCD_api_register_exception_handlers( Char *name, Cleanup_func cleanup )
+PCD_status_e PCD_api_register_exception_handlers( char *name, Cleanup_func cleanup )
 {
     struct sigaction sa;
     pid_t pid = getpid();
 
     if ( !name )
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
 
     if ( cleanup )
         cleanupFunc = cleanup;
@@ -385,22 +385,22 @@ STATUS PCD_api_register_exception_handlers( Char *name, Cleanup_func cleanup )
     SETSIG(sa, SIGQUIT, PCD_exception_default_handler);
     SETSIG(sa, SIGFPE,  PCD_exception_default_handler);
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
 /**************************************************************************/
-/*! \fn PCD_api_find_process_id( Char *name )                             */
+/*! \fn PCD_api_find_process_id( char *name )                             */
 /**************************************************************************/
 /*  \brief Find process ID, detects if another instance alrady running.   *
  *  \param[in] 		Process name       							*
  *  \return pid on success, or 0 if not found                             *
  **************************************************************************/
-pid_t PCD_api_find_process_id( Char *name )
+pid_t PCD_api_find_process_id( char *name )
 {
-    Int32 fd = -1;
-    Char filename[ 25 ];
-    Char lbuf[ 255 ];
-    Int32 currPid, endPid;
+    int32_t fd = -1;
+    char filename[ 25 ];
+    char lbuf[ 255 ];
+    int32_t currPid, endPid;
 
     endPid = getpid();
 
@@ -442,19 +442,19 @@ pid_t PCD_api_find_process_id( Char *name )
 }
 
 /**************************************************************************/
-/*! \fn PCD_api_reboot( Char *reason )                                    */
+/*! \fn PCD_api_reboot( char *reason )                                    */
 /**************************************************************************/
 /*  \brief Display a reboot reason (optional) and reboot the system.      *
  *  \param[in] 		Reboot reason (optinal)       						  *
  *  \param[in] 		Force: Force reboot even if PCD is in debug mode.     *
  *  \return Never returns                                                 *
  **************************************************************************/
-void PCD_api_reboot( const Char *reason, Bool force )
+void PCD_api_reboot( const char *reason, bool_t force )
 {
-    Char fname[30]; /* Provides space for 15 digits for the pid */
-    Int32 fd;
+    char fname[30]; /* Provides space for 15 digits for the pid */
+    int32_t fd;
     pid_t pid = getpid();
-    Char cmdline[ 255 ] = { '\0'};
+    char cmdline[ 255 ] = { '\0'};
 
     /* Get filename by PID */
     sprintf(fname, "/proc/%d/cmdline", pid);
@@ -498,15 +498,16 @@ void PCD_api_reboot( const Char *reason, Bool force )
     while ( 1 );
 }
 
-static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *context)
+static void PCD_exception_default_handler(int32_t signo, siginfo_t *info, void *context)
 {
     exception_t exception;
-    Int32 fd1, fd2;
-    Int32 total = sizeof( exception_t );
-    Int32 i;
+    int32_t fd1, fd2;
+    int32_t total = sizeof( exception_t );
+    int32_t i;
 
-/* ARM registers */ /* X86 processor context */ /* MIPS registers */
-#if defined(CONFIG_PCD_PLATFORM_ARM) || defined(CONFIG_PCD_PLATFORM_X86) || defined(CONFIG_PCD_PLATFORM_MIPS)
+    /* Get platform specific registers */
+#if defined(CONFIG_PCD_PLATFORM_ARM) || defined(CONFIG_PCD_PLATFORM_X86) \
+    || defined(CONFIG_PCD_PLATFORM_MIPS) || defined(CONFIG_PCD_PLATFORM_X64)
     ucontext_t *ctx = (ucontext_t *)context;
 #endif
 
@@ -532,12 +533,16 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
     exception.uc_mctx = ctx->uc_mcontext;
 #endif
 
+#if defined(CONFIG_PCD_PLATFORM_X64) /* x64 Registers */
+    exception.uc_mcontext = ctx->uc_mcontext;
+#endif
+
     fd1 = open( mapsFile, O_RDONLY );
 
     if ( fd1 > 0 )
     {
-        Uint8 buf[ 512 ];
-        Int32 readBytes = 0;
+        u_int8_t buf[ 512 ];
+        int32_t readBytes = 0;
 
         /* Create a temporary file which will be available after the process is dead */
         fd2 = open( mapsTmpFile, O_CREAT | O_WRONLY | O_SYNC, S_IRWXU | S_IRWXG );
@@ -566,7 +571,7 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
 
     while ( total > 0 )
     {
-        Int32 written;
+        int32_t written;
 
         written = write( fd1, &exception, sizeof( exception_t ) );
 
@@ -589,9 +594,9 @@ static void PCD_exception_default_handler(Int32 signo, siginfo_t *info, void *co
 /*! \fn PCD_api_reduce_net_rx_priority
  *  \brief Reduce net-rx task priority to a given priority value (non preemtive mode)
  *  \param[in] 		New priority: 19 (lowest) to -19 (highest)
- *  \return 		STATUS_OK - Success, <0 - Error
+ *  \return 		PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_reduce_net_rx_priority( Int32 priority )
+PCD_status_e PCD_api_reduce_net_rx_priority( int32_t priority )
 {
     return PCD_api_malloc_and_send( NULL, PCD_API_REDUCE_NETRX_PRIORITY, NULL, priority );
 }
@@ -599,9 +604,9 @@ STATUS PCD_api_reduce_net_rx_priority( Int32 priority )
 /*! \fn PCD_api_restore_net_rx_priority
  *  \brief Restore net-rx task original priority
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, <0 - Error
+ *  \return			PCD_STATUS_OK - Success, <0 - Error
  */
-STATUS PCD_api_restore_net_rx_priority( void )
+PCD_status_e PCD_api_restore_net_rx_priority( void )
 {
     return PCD_api_malloc_and_send( NULL, PCD_API_RESTORE_NETRX_PRIORITY, NULL, 0 );
 }

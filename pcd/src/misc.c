@@ -42,9 +42,9 @@
 #include "pcd.h"
 
 static pid_t netRxPid = 0;
-static Uint32 netRxPriority = 0;
+static u_int32_t netRxPriority = 0;
 
-STATUS PCD_misc_reduce_net_rx_priority( Int32 priority )
+PCD_status_e PCD_misc_reduce_net_rx_priority( int32_t priority )
 {
     struct sched_param setParam;
 
@@ -69,13 +69,13 @@ STATUS PCD_misc_reduce_net_rx_priority( Int32 priority )
         setParam.sched_priority = 0;
         sched_setscheduler( netRxPid, SCHED_OTHER, &setParam );
         setpriority( PRIO_PROCESS, netRxPid, priority );
-        return STATUS_OK;
+        return PCD_STATUS_OK;
     }
 
-    return STATUS_NOK;
+    return PCD_STATUS_NOK;
 }
 
-STATUS PCD_misc_restore_net_rx_priority( void )
+PCD_status_e PCD_misc_restore_net_rx_priority( void )
 {
     struct sched_param setParam;
 
@@ -89,6 +89,6 @@ STATUS PCD_misc_restore_net_rx_priority( void )
         netRxPid = 0;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 

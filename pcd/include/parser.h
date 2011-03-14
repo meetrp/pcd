@@ -70,16 +70,16 @@
  *  \brief 			Parse a configuration file
  *  \param[in] 		Filename
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, Otherwise - Error
+ *  \return			PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_parser_parse( const Char *filename );
+PCD_status_e PCD_parser_parse( const char *filename );
 
 /*! \fn				PCD_parser_enable_verbose
  *  \brief 			Enable verbose prints in the end of the parse
  *  \param[in] 		Enable flag
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, Otherwise - Error
+ *  \return			PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_parser_enable_verbose( Bool enable );
+PCD_status_e PCD_parser_enable_verbose( bool_t enable );
 
 #endif /* _PARSER_H_ */

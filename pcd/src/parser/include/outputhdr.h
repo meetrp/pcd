@@ -49,29 +49,29 @@
 /*      INTERFACE FUNCTIONS Prototypes:                                   */
 /**************************************************************************/
 
-/*! \fn STATUS PCD_output_header_create_file
+/*! \fn PCD_status_e PCD_output_header_create_file
  *  \brief open header file
  *  \param[in] headerFilename, headerHandle.
  *  \param[out] graphHandle.
  *  \return OK or error status.
  */
-STATUS PCD_output_header_create_file( const Char *headerFilename, void **headerHandle );
+PCD_status_e PCD_output_header_create_file( const char *headerFilename, void **headerHandle );
 
-/*! \fn STATUS PCD_output_header_close_file
+/*! \fn PCD_status_e PCD_output_header_close_file
  *  \brief close header file
  *  \param[in] headerFilename, headerHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_output_header_close_file( const Char *headerFilename, const void *headerHandle );
+PCD_status_e PCD_output_header_close_file( const char *headerFilename, const void *headerHandle );
 
-/*! \fn STATUS PCD_output_header_update_file
+/*! \fn PCD_status_e PCD_output_header_update_file
  *  \brief Add a new item in graph
  *  \param[in] rule, headerHandle.
  *  \param[out] no output.
  *  \return OK or error status.
  */
-STATUS PCD_output_header_update_file( rule_t *newrule, const void *headerHandle );
+PCD_status_e PCD_output_header_update_file( rule_t *newrule, const void *headerHandle );
 
 #endif /* _OUTPUTHDR_H_ */
 

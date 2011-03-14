@@ -57,16 +57,16 @@ extern pid_t netRxPid;
  *                  boot during high traffic
  *  \param[in] 		priority
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, Otherwise - Error
+ *  \return			PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_misc_reduce_net_rx_priority( Int32 priority );
+PCD_status_e PCD_misc_reduce_net_rx_priority( int32_t priority );
 
 /*! \fn				PCD_misc_restore_net_rx_priority
  *  \brief 			restore softirq-net-rx priority
  *  \param[in] 		None
  *  \param[in,out] 	None
- *  \return			STATUS_OK - Success, Otherwise - Error
+ *  \return			PCD_STATUS_OK - Success, Otherwise - Error
  */
-STATUS PCD_misc_restore_net_rx_priority( void );
+PCD_status_e PCD_misc_restore_net_rx_priority( void );
 
 #endif /* _MISC_H_ */

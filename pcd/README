@@ -1,4 +1,4 @@
-PCD - Process Control Daemon application and library v1.0.9 - February 2011
+PCD - Process Control Daemon application and library
 
 -------------------------------------------------------------------------------
 
@@ -13,9 +13,14 @@ The PCD application is designed to run on an embedded target platform.
 It was developed and tested on an ARM11 platform. However, the code is 
 portable and was compiled and tested on in x86 and MIPS environments as well.
 
-In order to activate the PCD, it must be given with a startup script, which
-contains all the required rules. See the documentation, examples and the 
-design document for more details.
+The PCD can be activated in full mode, or in crash-daemon only mode.
+In full mode, the PCD must be given with a startup script which contains all 
+the required rules (See the documentation, examples and the design document for
+more details). In crash-daemon only mode, the PCD is idle and waiting for an
+incoming crash notification from any process in order to display the crash
+dump log. Please note that all processes which require the PCD crash-daemon
+facility must link with the PCD library and register to the PCD exception
+handlers.
 
 Configuration:
 The PCD project supports Kconfig configuration, similarly to the Linux Kernel.
@@ -31,6 +36,14 @@ Don't forget to:
 - Setup your target installation directory.
 
 Make sure that you have write permission to the destination directories!
+
+If the process fails during configuration time and it's not because of write permission,
+please make sure that you have bison and flex packages installed. These are required 
+for the Kconfig engine.
+
+For ubuntu users, use these commands to get these packages:
+$ sudo apt-get install bison
+$ sudo apt-get install flex
 
 Compilation:
 Run "make all" or "make pcd" to compile everything.
@@ -48,6 +61,7 @@ Command line parameters for the PCD (on the target):
 -t tick, --timer-tick=t : Setup timer ticks in ms (default 200ms).
 -e FILE, --errlog=FILE	: Specify error log file (in nvram)
 -d, --debug             : Debug mode
+-c, --crashd            : Enable crash-daemon only mode (no rules file)
 -V, --version			: Display PCD version
 -h, --help 				: Display usage screen
 
@@ -117,6 +131,8 @@ FAILURE_ACTION = { NONE, REBOOT, RESTART, EXEC_RULE id }
 # Rule is Active or not (To be activated later by PCD API)
 ACTIVE = { YES, NO }
 ################### End of a rule block #############################
+
+Checkout the script examples available in the documentation area.
 
 -------------------------------------------------------------------------------
 
