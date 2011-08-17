@@ -217,9 +217,9 @@ IPC_status_e IPC_init( u_int32_t flags )
 
         if( newdb )
         {
-            /* Create a lock and clear the list in the very first time */
+            /* Create a lock and clear the list in the very first time */            
+            memset( IPC_Clients, 0, sizeof( IPC_list_t ) );
             pthread_mutex_init( &IPC_Clients->lock, 0 );
-            memset( IPC_Clients, 0, sizeof( IPC_Clients ) );
         }
     }
     return IPC_STATUS_OK;
