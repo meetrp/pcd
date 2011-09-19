@@ -18,6 +18,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Change log:
+ * - Nick Stay, nlstay@gmail.com, Added optional USER field so that processes 
+ *   can be executed as an arbitrary user.
  */
 
 /* Author:
@@ -35,10 +38,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <sys/utsname.h>
 #include "system_types.h"
 #include "rules_db.h"
@@ -791,6 +796,60 @@ static int32_t PCD_parser_handle_DAEMON( char *line )
     else
         rule.daemon = False;
 
+    return 0;
+}
+
+static int32_t PCD_parser_handle_USER( char *line )
+{
+    PCD_FUNC_ENTER_PRINT
+
+    /* Check if the value is a string or number. If it is a string, then 
+     * we'll attempt to convert it to the correct UID */
+    char *linecopy = line;
+    int isnum = 1;
+    for( ; *linecopy != '\0'; ++linecopy )
+    {
+        if( isalpha( *linecopy ) )
+        {
+            isnum = 0;
+            break;
+        }
+    }
+    if ( isnum )
+    {
+        /* USER is a number, assume it is a direct UID */
+        errno = 0;
+        rule.uid = strtoul( line, (char**)NULL, 0 );
+        if ( errno != 0 )
+        {
+             PCD_PRINTF_STDERR( "USER numeric value is invalid for rule = %s",
+                               rule.ruleId.ruleName );
+        }
+    }
+    else
+    {
+        /* USER is a login name, attempt to convert it to the UID */
+        struct passwd* pw = getpwnam( line );
+        if( pw )
+        {
+            rule.uid = pw->pw_uid;
+        }
+        else
+        {
+#ifdef PCD_HOST_BUILD
+            /* On host, warn user that UID cannot be determined, but allow 
+             * parser to continue (since this user should exist on target) */
+            PCD_PRINTF_WARNING_STDOUT( "Cannot determine UID from USER field for rule = %s",
+                                       rule.ruleId.ruleName );
+#else
+            /* On target, this user must exist or it is an error */
+            PCD_PRINTF_STDERR( "Cannot determine UID from USER field for rule = %s",
+                               rule.ruleId.ruleName );
+            return -1;
+#endif
+        }
+    }
+    
     return 0;
 }
 

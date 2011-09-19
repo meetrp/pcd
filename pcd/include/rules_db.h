@@ -18,6 +18,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Change log:
+ * - Nick Stay, nlstay@gmail.com, Added optional USER field so that processes 
+ *   can be executed as an arbitrary user.
  */
 
 /* Author:
@@ -70,6 +73,7 @@ typedef struct rule_t
     failureAction_t     failureAction;
     schedType_t         sched;
     bool_t                daemon;
+    uid_t               uid;
     pcdRuleState_e      ruleState;
     bool_t                indexed;
 

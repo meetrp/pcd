@@ -18,6 +18,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Change log:
+ * - Nick Stay, nlstay@gmail.com, Added optional USER field so that processes 
+ *   can be executed as an arbitrary user.
  */
 
 /* Author:
@@ -495,6 +498,16 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
                     sched_setscheduler( pid, SCHED_FIFO, &setParam );
                 }
             }
+        }
+        
+        /* Change the UID of the process if necessary 
+         * Note: If the UID = 0, we do not change the UID because if we're 
+         * already root, no need to change to UID 0, and if we're not root, 
+         * then we don't allow running as root when PCD is running as a 
+         * non-root user */
+        if ( rule->uid )
+        {
+            setreuid( rule->uid, rule->uid );
         }
 
         /* Execute the file */

@@ -18,6 +18,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Change log:
+ * - Nick Stay, nlstay@gmail.com, Added optional USER field so that processes 
+ *   can be executed as an arbitrary user.
  */
 
 /* Author:
@@ -59,6 +62,7 @@
     PCD_PARSER_KEYWORD( ACTIVE,             1 )\
     PCD_PARSER_KEYWORD( SCHED,              0 )\
     PCD_PARSER_KEYWORD( DAEMON,             0 )\
+    PCD_PARSER_KEYWORD( USER,               0 )\
     PCD_PARSER_KEYWORD( VERSION,            0 )\
     PCD_PARSER_KEYWORD( INCLUDE,            0 )\
 
