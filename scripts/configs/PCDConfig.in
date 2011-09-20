@@ -43,6 +43,23 @@ config PCD_PLATFORM_OTHER
 
 endchoice 
 
+choice 
+		prompt "Forking method" 
+		default PCD_USE_FORK 
+
+config PCD_USE_FORK
+		bool "Use fork()" 
+		help 
+		Use standard fork() system call used in MMU enabled platforms. If you are not using uClinux, say Y.
+
+config PCD_USE_VFORK
+		bool "Use vfork() (EXPERIMENTAL)" 
+		help 
+		Use vfork() system call used in MMU-less platforms. If you are using uClinux, say Y.
+
+endchoice 
+
+
 config PCD_CROSS_COMPILER_PREFIX 
 		string "Cross compiler prefix" 
 		help 

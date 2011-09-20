@@ -180,6 +180,11 @@ static void PCD_parser_dump_config( rule_t *rule )
     printf( "Scheduling: %s (%d)\n", rule->sched.type == PCD_SCHED_TYPE_FIFO ? "FIFO" : "NICE", rule->sched.niceSched );
     printf( "Daemon: %s\n", rule->daemon ? "YES":"NO"  );
     printf( "Active: %s\n", rule->ruleState == PCD_RULE_ACTIVE ? "YES":"NO"  );
+    printf( "User id: " );
+    if( rule->uid )
+        printf( "%d\n", rule->uid );
+    else
+        printf( "Same as pcd\n" );
 }
 
 static int32_t PCD_parser_is_parse_status_set( parserKeywords_e kwId )

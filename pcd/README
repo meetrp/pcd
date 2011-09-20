@@ -55,15 +55,15 @@ directories for your reference.
 
 Command line parameters for the PCD (on the target):
 
--f FILE, --file=FILE 	: Specify PCD rules file.
--p, --print				: Print parsed configuration.
--v, --verbose			: Enable Verbose display (recommended).
+-f FILE, --file=FILE    : Specify PCD rules file.
+-p, --print             : Print parsed configuration.
+-v, --verbose           : Enable Verbose display (recommended).
 -t tick, --timer-tick=t : Setup timer ticks in ms (default 200ms).
--e FILE, --errlog=FILE	: Specify error log file (in nvram)
+-e FILE, --errlog=FILE  : Specify error log file (in nvram)
 -d, --debug             : Debug mode
 -c, --crashd            : Enable crash-daemon only mode (no rules file)
 -V, --version			: Display PCD version
--h, --help 				: Display usage screen
+-h, --help              : Display usage screen
 
 The PCD application needs to run as soon as the system is up. Usually, you
 should start it from init.d/rcS file, in the background.
@@ -130,6 +130,10 @@ FAILURE_ACTION = { NONE, REBOOT, RESTART, EXEC_RULE id }
 
 # Rule is Active or not (To be activated later by PCD API)
 ACTIVE = { YES, NO }
+
+# <Optional> Start the process either with a direct UID number or the login name (convered to UID in runtime)
+USER = { uid; username }
+
 ################### End of a rule block #############################
 
 Checkout the script examples available in the documentation area.

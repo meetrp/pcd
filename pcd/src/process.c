@@ -21,6 +21,8 @@
  * Change log:
  * - Nick Stay, nlstay@gmail.com, Added optional USER field so that processes 
  *   can be executed as an arbitrary user.
+ * - Hai Shalom: Experimental: support uClinux vfork instead of fork for 
+ *   MMU-less platforms.
  */
 
 /* Author:
@@ -98,6 +100,14 @@ procObj_t *procList = NULL;
     }
 
 #define PCD_PROCESS_WHITE_SPACES    " \t\n\r"
+
+#ifdef PCD_USE_VFORK
+#define __fork vfork
+#define __exit exit
+#else
+#define __fork fork
+#define __exit _exit
+#endif
 
 /* Signal handlers */
 static void PCD_process_terminate(int signo, siginfo_t *info, void *context);
@@ -270,7 +280,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
     sigprocmask(SIG_BLOCK, &nmask, &omask);
 
     /* Fork, create a child process */
-    pid = fork();
+    pid = __fork();
 
     if ( !pid )
     {
@@ -517,7 +527,7 @@ static procObj_t *PCD_process_spawn(procObj_t *proc)
         }
 
         /* Not reaching here... */
-        exit(0);
+        __exit(0);
     }
 
     proc->pid = pid;
