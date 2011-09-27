@@ -108,6 +108,14 @@ typedef struct pcdApiReplyMessage_t
  */
 PCD_status_e PCD_api_init( void );
 
+/*! \fn             PCD_api_deinit
+ *  \brief          Module's deinit function - Call before end of life
+ *  \param[in]      None
+ *  \param[in,out]  None
+ *  \return         PCD_STATUS_OK - Success, Otherwise - Error
+ */
+PCD_status_e PCD_api_deinit( void );
+
 /*! \fn             PCD_api_check_messages
  *  \brief          Check for incoming messages
  *  \param[in]      None

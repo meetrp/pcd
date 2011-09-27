@@ -138,6 +138,13 @@ PCD_status_e PCD_api_init( void )
     return PCD_STATUS_OK;
 }
 
+PCD_status_e PCD_api_deinit( void )
+{
+    /* Stopping and terminating IPC - Use before end of life only! */
+    IPC_stop( pcdContext );    
+    
+    return PCD_STATUS_OK;
+}
 
 PCD_status_e PCD_api_check_messages( void )
 {

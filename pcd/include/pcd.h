@@ -56,7 +56,7 @@ extern bool_t debugMode;
 /*! \def PCD_VERSION
  *  \brief PCD Version
  */
-#define PCD_VERSION									"1.1.2"
+#define PCD_VERSION									"1.1.3"
 
 /*! \def PCD_PRINT_PREFIX
  *  \brief Holds the prefix for printouts

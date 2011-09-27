@@ -36,9 +36,14 @@
  *
  * Copyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd
  * 
- * Change log:
- * - Use standard system types
+ * Author:
+ * Hai Shalom - hai@rt-embedded.com
  * 
+ * * Change log:
+ * - Hai Shalom: Use standard system types
+ * - Hai Shalom: Added deinit function
+ * - Hai Shalom: Added a lock to protect from concurrent accesses from 
+ *               the same context (threads).
  */
 
 #include <unistd.h>
@@ -90,6 +95,9 @@
     To stop the IPC on a specific destination point:
     1. IPC_stop         -> Stop the IPC. Free the resources.
 
+    To free the IPC resources after all destination points were stopped:
+    1. IPC_deinit       -> Deinitialize the library, free all resources.
+  
     General functions:
     1. IPC_cleanup_proc -> A general function to cleanup resources of a context. Can be used by a process monitor.
     2. IPC_general_func -> A general purpose function. Not used currently.
@@ -156,17 +164,18 @@ typedef struct
 typedef struct
 {
     key_t   i_key;
-    int32_t   i_shmid;
+    int32_t i_shmid;
     void    *i_shmaddr;
+    pthread_mutex_t lock;    
 
 } IPC_info_t;
 
 static IPC_list_t *IPC_Clients = NULL;
 
-static IPC_info_t info;
+static IPC_info_t info = { 0, 0, NULL };
 
 /* A small macro to determine if library was initialized */
-#define initDone ( IPC_Clients )
+#define initDone ( info.i_shmaddr )
 
 /* Enable this definition for debug prints */
 #ifdef IPC_DEBUG_ENABLE
@@ -213,6 +222,9 @@ IPC_status_e IPC_init( u_int32_t flags )
             return IPC_STATUS_NOK;
         }
 
+        /* Create a lock for info, for IPC concurrent accesses in the same context */
+        pthread_mutex_init( &info.lock, 0 );
+
         IPC_Clients = (IPC_list_t *)info.i_shmaddr;
 
         if( newdb )
@@ -221,6 +233,58 @@ IPC_status_e IPC_init( u_int32_t flags )
             memset( IPC_Clients, 0, sizeof( IPC_list_t ) );
             pthread_mutex_init( &IPC_Clients->lock, 0 );
         }
+    }
+    return IPC_STATUS_OK;
+}
+
+/*!\fn IPC_deinit
+ * \brief Deinitialize the IPC module. IPC will be unavailable after this function call.
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
+ */
+IPC_status_e IPC_deinit( u_int32_t flags )
+{
+    u_int32_t i;
+    
+    ENTER_FUNC;
+
+    if ( initDone )
+    {        
+        void *shmaddr = info.i_shmaddr;
+        
+        /* Wait for the lock */
+        pthread_mutex_lock( &IPC_Clients->lock );
+        
+        /* Clear the shared memory address */
+        info.i_shmaddr = NULL;
+        
+        for( i = 0; i < IPC_MAX_LIST_SIZE; i++ )
+        {
+            if( IPC_Clients->list[ i ].fd ) 
+            {
+                /* Remove open sockets, might not be enough if owner did not close it */
+                unlink( IPC_Clients->list[ i ].path );
+            }
+        }
+
+        /* Clear the list just in case */            
+        memset( IPC_Clients->list, 0, sizeof( IPC_Clients->list ) );
+
+        /* Unlock and destroy the lock */
+        pthread_mutex_unlock( &IPC_Clients->lock );
+        pthread_mutex_destroy( &IPC_Clients->lock );
+
+        /* Delete shared memory segment */
+        if( shmdt( shmaddr ) < 0 )
+        {
+            IPC_PRINTF_ERROR_STDERR( "Shared memory failure" );
+            return IPC_STATUS_NOK;
+        }
+        
+        /* Unlock and destroy the global context lock */
+        pthread_mutex_destroy( &info.lock );
+        
+        /* Clear the info structure */            
+        memset( &info, 0, sizeof( IPC_info_t ) );
     }
     return IPC_STATUS_OK;
 }
@@ -332,7 +396,7 @@ IPC_status_e IPC_stop( IPC_context_t myContext )
     ENTER_FUNC;
 
     /* Sanity checks */
-    if( i >= IPC_MAX_LIST_SIZE || IPC_Clients->list[ i ].fd == 0 )
+    if( !initDone || i >= IPC_MAX_LIST_SIZE || IPC_Clients->list[ i ].fd == 0 )
     {
         return IPC_STATUS_NOK;
     }
@@ -340,14 +404,18 @@ IPC_status_e IPC_stop( IPC_context_t myContext )
     pthread_mutex_lock( &IPC_Clients->lock );
 
     /* Close the socket */
-    close( IPC_Clients->list[ i ].fd );
+    if( IPC_Clients->list[ i ].pid == getpid() )
+    {
+        close( IPC_Clients->list[ i ].fd );
+    }
 
     /* Clear the client record */
     unlink( IPC_Clients->list[ i ].path );
     IPC_Clients->list[ i ].path[ 0 ] = '\0';
     IPC_Clients->list[ i ].fd = 0;
     IPC_Clients->list[ i ].owner = IPC_NO_OWNER;
-
+    IPC_Clients->list[ i ].pid = 0;
+    
     pthread_mutex_unlock( &IPC_Clients->lock );
     return IPC_STATUS_OK;
 }
@@ -438,7 +506,7 @@ IPC_status_e IPC_send_msg( IPC_context_t destContext, IPC_message_t *msg )
     ENTER_FUNC;
 
     /* Sanity checks */
-    if ( !msg || msg->magic != IPC_MESSAGE_MAGIC || destIdx >= IPC_MAX_LIST_SIZE || IPC_Clients->list[ destIdx ].fd == 0 )
+    if ( !initDone || !msg || msg->magic != IPC_MESSAGE_MAGIC || destIdx >= IPC_MAX_LIST_SIZE || IPC_Clients->list[ destIdx ].fd == 0 )
     {
         return IPC_STATUS_NOK;
     }
@@ -446,12 +514,18 @@ IPC_status_e IPC_send_msg( IPC_context_t destContext, IPC_message_t *msg )
     to.sun_family = AF_UNIX;
     strcpy( to.sun_path, IPC_Clients->list[ destIdx ].path );
 
+    /* Wait for the lock */
+    pthread_mutex_lock( &info.lock );
+
     /* Send the message to the destination */
     if ( sendto( IPC_Clients->list[ msg->context ].fd, msg, msg->size, IPC_Clients->list[ msg->context ].flags, (struct sockaddr *)&to, sizeof(struct sockaddr_un) ) < 0 )
     {
+        pthread_mutex_unlock( &info.lock );
         IPC_PRINTF_ERROR_STDERR( "Send IPC messaged failed" );
         return IPC_STATUS_NOK;
     }
+
+    pthread_mutex_unlock( &info.lock );
 
     /* Message was copied by the kernel, we can now free the message */
     IPC_free_msg( msg );
@@ -473,7 +547,7 @@ IPC_status_e IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, I
     void *localMsgBuffer = NULL;
 
     /* Sanity checks */
-    if( i >= IPC_MAX_LIST_SIZE || !msgBuffer || IPC_Clients->list[ i ].fd == 0 )
+    if( !initDone || i >= IPC_MAX_LIST_SIZE || !msgBuffer || IPC_Clients->list[ i ].fd == 0 )
     {
         return IPC_STATUS_NOK;
     }
@@ -506,6 +580,9 @@ IPC_status_e IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, I
     FD_ZERO(&rdset);
     FD_SET(fd, &rdset);
 
+    /* Wait for the lock */
+    pthread_mutex_lock( &info.lock );
+
     /* Wait for incoming messages. Deal with signals correctly */
     do
     {
@@ -516,6 +593,7 @@ IPC_status_e IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, I
     if(ret <= 0)
     {
         /* timeout or error, return with error */
+        pthread_mutex_unlock( &info.lock );
         return IPC_STATUS_NOK;
     }
     else
@@ -534,7 +612,9 @@ IPC_status_e IPC_wait_msg( IPC_context_t myContext, IPC_message_t **msgBuffer, I
 
             /* Receive the message */
             ret = recv(fd, localMsgBuffer, IPC_MAX_BUFFER_SIZE, MSG_DONTWAIT | MSG_NOSIGNAL);
-
+            
+            pthread_mutex_unlock( &info.lock );
+            
             /* Read error */
             if( ret < 0 )
                  goto wait_msg_fail;
@@ -567,7 +647,7 @@ IPC_status_e IPC_reply_msg( IPC_message_t *incomingMsg, IPC_message_t *replyMsg 
     ENTER_FUNC;
 
     /* Sanity checks */
-    if ( !incomingMsg || incomingMsg->magic != IPC_MESSAGE_MAGIC
+    if ( !initDone || !incomingMsg || incomingMsg->magic != IPC_MESSAGE_MAGIC
          || !replyMsg || replyMsg->magic != IPC_MESSAGE_MAGIC )
     {
         return IPC_STATUS_NOK;
@@ -576,13 +656,20 @@ IPC_status_e IPC_reply_msg( IPC_message_t *incomingMsg, IPC_message_t *replyMsg 
     to.sun_family = AF_UNIX;
     strcpy( to.sun_path, IPC_Clients->list[ (int32_t)incomingMsg->context ].path );
 
+    /* Wait for the lock */
+    pthread_mutex_lock( &info.lock );
+
     /* Send a reply */
     if ( sendto( IPC_Clients->list[ (int32_t)replyMsg->context ].fd, replyMsg, replyMsg->size, IPC_Clients->list[ (int32_t)replyMsg->context ].flags, (struct sockaddr *)&to, sizeof(struct sockaddr_un) ) < 0 )
     {
+        pthread_mutex_unlock( &info.lock );
+        
         IPC_PRINTF_ERROR_STDERR( "Send IPC messaged failed" );
         return IPC_STATUS_NOK;
     }
 
+    pthread_mutex_unlock( &info.lock );
+    
     /* Message was copied by the kernel, we can now free the message */
     IPC_free_msg( replyMsg );
 
@@ -618,8 +705,14 @@ IPC_status_e IPC_cleanup_proc( pid_t pid )
 
     ENTER_FUNC;
 
+    if( !initDone )
+    {
+        return IPC_STATUS_NOK;
+    }
+   
     while ( i < IPC_MAX_LIST_SIZE )
     {
+        /* Remove all entries of a specific pid */
         if ( ( IPC_Clients->list[ i ].fd != 0 ) && ( IPC_Clients->list[ i ].pid == pid ) )
         {
             return IPC_stop( (IPC_context_t)i );
@@ -627,7 +720,7 @@ IPC_status_e IPC_cleanup_proc( pid_t pid )
 
         i++;
     }
-
+   
     return IPC_STATUS_OK;
 }
 
@@ -642,7 +735,7 @@ IPC_status_e IPC_set_owner( IPC_context_t myContext, u_int32_t owner )
     ENTER_FUNC;
 
     /* Sanity checks */
-    if ( i >= IPC_MAX_LIST_SIZE )
+    if ( !initDone || i >= IPC_MAX_LIST_SIZE )
         return IPC_STATUS_NOK;
 
     pthread_mutex_lock( &IPC_Clients->lock );
@@ -664,7 +757,7 @@ IPC_status_e IPC_get_context_by_owner( IPC_context_t *destContext, u_int32_t own
     ENTER_FUNC;
 
     /* Sanity checks */
-    if( !destContext )
+    if( !initDone || !destContext )
     {
         return IPC_STATUS_NOK;
     }

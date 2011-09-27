@@ -197,6 +197,9 @@ static void PCD_process_terminate(int signo, siginfo_t *info, void *context)
     /* Display reboot message */
     i = write( STDERR_FILENO, msg2, sizeof(msg2) );
 
+    /* Stop IPC */
+    PCD_api_deinit();
+
     /* Stop PCD timer */
     PCD_timer_stop();
 

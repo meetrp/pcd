@@ -34,6 +34,8 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
+ * Author:
+ * Hai Shalom - hai@rt-embedded.com
  */
 
 #ifndef __IPC_H__
@@ -76,6 +78,9 @@
     To stop the IPC on a specific destination point:
     1. IPC_stop         -> Stop the IPC. Free the resources.
 
+    To free the IPC resources after all destination points were stopped:
+    1. IPC_deinit       -> Deinitialize the library, free all resources.
+  
     General functions:
     1. IPC_cleanup_proc -> A general function to cleanup resources of a context. Can be used by a process monitor.
     2. IPC_general_func -> A general purpose function. Not used currently.
@@ -130,6 +135,12 @@ typedef u_int32_t IPC_context_t;
  * \return			IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
  */
 IPC_status_e IPC_init( u_int32_t flags );
+
+/*!\fn IPC_deinit
+ * \brief Deinitialize the IPC module. IPC will be unavailable after this function call.
+ * \return          IPC_STATUS_OK - Success, IPC_STATUS_NOK - Error
+ */
+IPC_status_e IPC_deinit( u_int32_t flags );
 
 /*!\fn IPC_start
  * \brief Start a communication channel.
