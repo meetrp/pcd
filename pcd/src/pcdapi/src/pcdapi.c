@@ -110,7 +110,7 @@ static PCD_status_e PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdA
 
     if ( IPC_get_context_by_owner( &pcdCtx, CONFIG_PCD_OWNER_ID ) != PCD_STATUS_OK )
     {
-        PCD_PRINTF_STDERR( "Failed to find PCD context");       
+        printf( "pcd: Error: Failed to find PCD context\n");       
         return PCD_STATUS_INVALID_RULE;
     }
 
@@ -119,7 +119,7 @@ static PCD_status_e PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdA
     /* Create temporary destination point */
     if ( IPC_start( pcdClient, &pcdTmpCtx, 0) != PCD_STATUS_OK )
     {
-        PCD_PRINTF_STDERR( "Failed to start IPC");
+        printf( "pcd: Error: Failed to start IPC\n");
         return PCD_STATUS_NOK;
     }
 
@@ -128,7 +128,7 @@ static PCD_status_e PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdA
 
     if ( !msg )
     {
-        PCD_PRINTF_STDERR( "Failed to allocate memory" );
+        printf( "pcd: Error: Failed to allocate memory\n" );
         retval = PCD_STATUS_NOK;
 
         goto end_malloc_and_send;
@@ -151,7 +151,7 @@ static PCD_status_e PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdA
         /* Check that the given ruleId is not NULL */
         if ( ( !ruleId->groupName[ 0 ] ) || ( !ruleId->ruleName[ 0 ] ) )
         {
-            PCD_PRINTF_STDERR( "Invalid rule ID" );
+            printf( "pcd: Error: Invalid rule ID\n" );
             IPC_free_msg( msg );
             retval = PCD_STATUS_NOK;
 
