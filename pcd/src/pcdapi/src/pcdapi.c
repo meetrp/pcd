@@ -18,12 +18,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
- * Copyright (C) 2010 PCD Project - http://www.rt-embedded.com/pcd
+ * Copyright (C) 2010-12 PCD Project - http://www.rt-embedded.com/pcd
  * 
  * Change log:
  * - Support dynamic configurations from kconfig
  * - Support MIPS platform
  * - Support x86 platform
+ * - Support x64 platform
+ * - Fix the process find function
  */
 
 /* Author:
@@ -428,7 +430,7 @@ pid_t PCD_api_find_process_id( char *name )
                     p1++;
                     *p2 = '\0';
 
-                    if ( strstr( p1, name ) )
+                    if ( strncmp( p1, name, strlen( p1 ) ) == 0 )
                     {
                         close(fd);
                         return currPid;

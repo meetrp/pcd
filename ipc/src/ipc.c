@@ -229,11 +229,18 @@ IPC_status_e IPC_init( u_int32_t flags )
 
         if( newdb )
         {
+            pthread_mutexattr_t mutex_attr;
+            
             /* Create a lock and clear the list in the very first time */            
             memset( IPC_Clients, 0, sizeof( IPC_list_t ) );
-            pthread_mutex_init( &IPC_Clients->lock, 0 );
+            
+            /* Make the lock shared across all processes */
+            pthread_mutexattr_init( &mutex_attr );
+            pthread_mutexattr_setpshared( &mutex_attr, PTHREAD_PROCESS_SHARED );
+            pthread_mutex_init( &IPC_Clients->lock, &mutex_attr );
         }
     }
+    
     return IPC_STATUS_OK;
 }
 
