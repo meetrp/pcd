@@ -129,6 +129,8 @@ check_permissions:
 	@mkdir -p $(CONFIG_PCD_INSTALL_DIR_HOST) && touch $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_HOST)/pcd.tmp
 	@echo Checking write permission: $(CONFIG_PCD_INSTALL_DIR_PREFIX)
 	@mkdir -p $(CONFIG_PCD_INSTALL_DIR_PREFIX) && touch $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp 2> /dev/null && rm $(CONFIG_PCD_INSTALL_DIR_PREFIX)/pcd.tmp
+	@echo Checking write permission: $(PCD_ROOT)/include
+	@mkdir -p $(PCD_ROOT)/include && touch $(PCD_ROOT)/include/pcd.tmp 2> /dev/null && rm $(PCD_ROOT)/include/pcd.tmp
 
 check_config:
 	@if [ ! -f $(PCD_ROOT)/.config ]; then \
@@ -167,5 +169,6 @@ clean:
 distclean: clean
 	@rm -f .config .config.old $(PCD_CFG_DIR)/pcd_autoconf.h $(PCD_CFG_DIR)/auto.conf
 	@rm -f $(PCD_KCFG_DIR)/.config $(PCD_KCFG_DIR)/.config.old $(PCD_KCFG_DIR)/pcd_autoconf.h $(PCD_KCFG_DIR)/auto.conf
+	@rm -rf $(PCD_ROOT)/include $(PCD_ROOT)/bin
 
 .PHONY: all install check_permissions check_config clean distclean help conf pcd_title menuconfig xconfig defconfig oldconfig
