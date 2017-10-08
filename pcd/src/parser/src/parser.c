@@ -18,6 +18,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
+ * Change log:
+ * - Nick Stay, nlstay@gmail.com, Added optional USER field so that processes 
+ *   can be executed as an arbitrary user.
  */
 
 /* Author:
@@ -35,10 +38,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <sys/utsname.h>
 #include "system_types.h"
 #include "rules_db.h"
@@ -58,10 +63,10 @@
 
 typedef struct configKeywordHandler_t
 {
-    Char      *name;
-    Int32     (*handler)(Char *line);
-    Uint32    parse_flag;        /* set at run time. */
-    Uint32    mandatory_flag;    /* indicate if this is a mandatory field. */
+    char      *name;
+    int32_t     (*handler)(char *line);
+    u_int32_t    parse_flag;        /* set at run time. */
+    u_int32_t    mandatory_flag;    /* indicate if this is a mandatory field. */
 
 } configKeywordHandler_t;
 
@@ -69,7 +74,7 @@ typedef struct configKeywordHandler_t
  * Declarations for the keyword handlers.
  **************************************************************************/
 #define PCD_PARSER_KEYWORD( keyword, mandatory )\
-    static Int32 SET_HANDLER_FUNC( keyword ) ( Char *line );
+    static int32_t SET_HANDLER_FUNC( keyword ) ( char *line );
 
 PCD_PARSER_KEYWORDS
 
@@ -106,7 +111,7 @@ typedef enum parserKeywords_e
 #define PCD_START_COND_KEYWORD( keyword ) \
     XSTR( keyword ),
 
-static const Char *startCondKeywords[] =
+static const char *startCondKeywords[] =
 {
     PCD_START_COND_KEYWORDS
     NULL
@@ -117,7 +122,7 @@ static const Char *startCondKeywords[] =
 #define PCD_END_COND_KEYWORD( keyword ) \
     XSTR( keyword ),
 
-static const Char *endCondKeywords[] =
+static const char *endCondKeywords[] =
 {
     PCD_END_COND_KEYWORDS
     NULL
@@ -128,7 +133,7 @@ static const Char *endCondKeywords[] =
 #define PCD_FAILURE_ACTION_KEYWORD( keyword ) \
     XSTR( keyword ),
 
-static const Char *failureActionKeywords[] =
+static const char *failureActionKeywords[] =
 {
     PCD_FAILURE_ACTION_KEYWORDS
     NULL
@@ -143,12 +148,12 @@ static const Char *failureActionKeywords[] =
  * Global definitions
  **************************************************************************/
 static rule_t     rule;
-static Int32      fileVersion = -1;
-static Uint32     readParseStatus = 0;   /* Did we read all the neccessary fields to populate rule? */
-static Uint32     writableParseStatus = 0;   /* Must have fields to populate the rule. */
-static Uint32     lineNumber = 0;   /* The line number of input file which we are reading. */
-static Uint32     verbose = 0;    /* Show rules after parsing */
-static Uint32     totalRuleRecords = 0;   /* The number of records written into the database. */
+static int32_t      fileVersion = -1;
+static u_int32_t     readParseStatus = 0;   /* Did we read all the neccessary fields to populate rule? */
+static u_int32_t     writableParseStatus = 0;   /* Must have fields to populate the rule. */
+static u_int32_t     lineNumber = 0;   /* The line number of input file which we are reading. */
+static u_int32_t     verbose = 0;    /* Show rules after parsing */
+static u_int32_t     totalRuleRecords = 0;   /* The number of records written into the database. */
 
 static void PCD_parser_dump_config( rule_t *rule );
 
@@ -171,13 +176,18 @@ static void PCD_parser_dump_config( rule_t *rule )
     if ( rule->timeout == ~0 )
         printf( "None\n" );
     else
-        printf( "%dms\n", (Uint32)rule->timeout);
+        printf( "%dms\n", (u_int32_t)rule->timeout);
     printf( "Scheduling: %s (%d)\n", rule->sched.type == PCD_SCHED_TYPE_FIFO ? "FIFO" : "NICE", rule->sched.niceSched );
     printf( "Daemon: %s\n", rule->daemon ? "YES":"NO"  );
     printf( "Active: %s\n", rule->ruleState == PCD_RULE_ACTIVE ? "YES":"NO"  );
+    printf( "User id: " );
+    if( rule->uid )
+        printf( "%d\n", rule->uid );
+    else
+        printf( "Same as pcd\n" );
 }
 
-static Int32 PCD_parser_is_parse_status_set( parserKeywords_e kwId )
+static int32_t PCD_parser_is_parse_status_set( parserKeywords_e kwId )
 {
     configKeywordHandler_t *kwPtr = &keywordHandlersList[kwId];
 
@@ -191,7 +201,7 @@ static Int32 PCD_parser_is_parse_status_set( parserKeywords_e kwId )
     return( (readParseStatus & kwPtr->parse_flag)? 1:0);
 }
 
-static Int32 PCD_parser_update_parse_status( parserKeywords_e kwId )
+static int32_t PCD_parser_update_parse_status( parserKeywords_e kwId )
 {
     configKeywordHandler_t *kwPtr = &keywordHandlersList[0];
 
@@ -237,7 +247,7 @@ static Int32 PCD_parser_update_parse_status( parserKeywords_e kwId )
     return( 0 );
 }
 
-static Int32 PCD_parser_clear_parse_status( parserKeywords_e kwId )
+static int32_t PCD_parser_clear_parse_status( parserKeywords_e kwId )
 {
     configKeywordHandler_t *kwPtr = &keywordHandlersList[kwId];
     int ret_val = -1;
@@ -254,11 +264,11 @@ static Int32 PCD_parser_clear_parse_status( parserKeywords_e kwId )
     return( ret_val );
 }
 
-static Int32 PCD_parser_add_rule(rule_t *rule)
+static int32_t PCD_parser_add_rule(rule_t *rule)
 {
     PCD_FUNC_ENTER_PRINT
 
-    if ( PCD_rulesdb_add_rule( rule ) == STATUS_OK )
+    if ( PCD_rulesdb_add_rule( rule ) == PCD_STATUS_OK )
     {
         if ( verbose )
             PCD_parser_dump_config( rule );
@@ -274,7 +284,7 @@ static Int32 PCD_parser_add_rule(rule_t *rule)
     return( 0 );
 }
 
-static Int32 PCD_parser_write_rule_to_db( parserKeywords_e kwId )
+static int32_t PCD_parser_write_rule_to_db( parserKeywords_e kwId )
 {
     PCD_FUNC_ENTER_PRINT
 
@@ -289,7 +299,7 @@ static Int32 PCD_parser_write_rule_to_db( parserKeywords_e kwId )
     return( 0 );
 }
 
-static Int32 PCD_parser_print_error(configKeywordHandler_t *kwPtr)
+static int32_t PCD_parser_print_error(configKeywordHandler_t *kwPtr)
 {
     PCD_FUNC_ENTER_PRINT
 
@@ -298,21 +308,21 @@ static Int32 PCD_parser_print_error(configKeywordHandler_t *kwPtr)
 }
 
 #ifdef PCD_HOST_BUILD
-extern Char hostPrefix[ 128 ];
+extern char hostPrefix[ 128 ];
 #endif
 
 /**************************************************************************
  * File readers and initializers.
  **************************************************************************/
-static Int32 PCD_parser_read_config( const Char *filename, Bool toplevel )
+static int32_t PCD_parser_read_config( const char *filename, bool_t toplevel )
 {
     FILE *in;
-    Char buffer[PCD_PARSER_MAX_LINE_SIZE], orig[PCD_PARSER_MAX_LINE_SIZE], *token, *line;
-    Int32 i, ret_val = 0;
+    char buffer[PCD_PARSER_MAX_LINE_SIZE], orig[PCD_PARSER_MAX_LINE_SIZE], *token, *line;
+    int32_t i, ret_val = 0;
     configKeywordHandler_t *kwPtr;
 #ifdef PCD_HOST_BUILD
     {
-        Char hostFilename[ 255 ];
+        char hostFilename[ 255 ];
 
         PCD_FUNC_ENTER_PRINT
 
@@ -405,7 +415,7 @@ static Int32 PCD_parser_read_config( const Char *filename, Bool toplevel )
     return( ret_val );
 }
 
-static Int32 PCD_parser_generate_config( const Char *filename )
+static int32_t PCD_parser_generate_config( const char *filename )
 {
     int ret_val = -1;
 
@@ -427,7 +437,7 @@ static Int32 PCD_parser_generate_config( const Char *filename )
     return( ret_val );
 }
 
-static Int32 PCD_parser_init_kwHandlersList(void)
+static int32_t PCD_parser_init_kwHandlersList(void)
 {
     int index;
     configKeywordHandler_t *kwHandlersListPtr = &keywordHandlersList[0];
@@ -456,10 +466,10 @@ static Int32 PCD_parser_init_kwHandlersList(void)
 /**************************************************************************
  * Implementation of the handlers.
  **************************************************************************/
-static Int32 PCD_parser_parse_rule_id( ruleId_t *ruleId, Char *line )
+static int32_t PCD_parser_parse_rule_id( ruleId_t *ruleId, char *line )
 {
-    Char *token1, *token2;
-    Uint32 cp;
+    char *token1, *token2;
+    u_int32_t cp;
 
     PCD_FUNC_ENTER_PRINT
 
@@ -491,7 +501,7 @@ static Int32 PCD_parser_parse_rule_id( ruleId_t *ruleId, Char *line )
 }
 
 
-static Int32 PCD_parser_handle_VERSION( Char *line )
+static int32_t PCD_parser_handle_VERSION( char *line )
 {
     PCD_FUNC_ENTER_PRINT
 
@@ -501,7 +511,7 @@ static Int32 PCD_parser_handle_VERSION( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_ACTIVE( Char *line )
+static int32_t PCD_parser_handle_ACTIVE( char *line )
 {
     PCD_FUNC_ENTER_PRINT
 
@@ -516,10 +526,10 @@ static Int32 PCD_parser_handle_ACTIVE( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_INCLUDE( Char *line )
+static int32_t PCD_parser_handle_INCLUDE( char *line )
 {
-    Uint32    local_read_parse_status = readParseStatus;   /* Did we read all the neccessary fields to populate rule? */
-    Uint32    local_line_num = lineNumber;   /* The line number of input file which we are reading. */
+    u_int32_t    local_read_parse_status = readParseStatus;   /* Did we read all the neccessary fields to populate rule? */
+    u_int32_t    local_line_num = lineNumber;   /* The line number of input file which we are reading. */
     rule_t    local_rule = rule;
 
     PCD_FUNC_ENTER_PRINT
@@ -540,9 +550,9 @@ static Int32 PCD_parser_handle_INCLUDE( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_RULE( Char *line )
+static int32_t PCD_parser_handle_RULE( char *line )
 {
-    STATUS retval;
+    PCD_status_e retval;
 
     PCD_FUNC_ENTER_PRINT
 
@@ -564,9 +574,9 @@ static Int32 PCD_parser_handle_RULE( Char *line )
 
     retval = PCD_parser_parse_rule_id( &rule.ruleId, line );
 
-    if ( retval == STATUS_OK )
+    if ( retval == PCD_STATUS_OK )
     {
-        Char *ptr;
+        char *ptr;
 
         if ( ( ptr = strchr( rule.ruleId.ruleName, '$' ) ) != NULL )
         {
@@ -578,10 +588,10 @@ static Int32 PCD_parser_handle_RULE( Char *line )
     return retval;
 }
 
-static Int32 PCD_parser_handle_START_COND( Char *line )
+static int32_t PCD_parser_handle_START_COND( char *line )
 {
-    Char *token1, *token2;
-    Uint32 i = 0;
+    char *token1, *token2;
+    u_int32_t i = 0;
 
     PCD_FUNC_ENTER_PRINT
 
@@ -620,9 +630,9 @@ static Int32 PCD_parser_handle_START_COND( Char *line )
     /* Special care here because we don't need token2, but we find tokens in a loop */
     if ( i == PCD_START_COND_KEYWORD_RULE_COMPLETED )
     {
-        Uint32 j = 0;
-        Char *token;
-        Char tempToken[ PCD_RULEID_MAX_GROUP_NAME_SIZE+PCD_RULEID_MAX_RULE_NAME_SIZE+2 ];
+        u_int32_t j = 0;
+        char *token;
+        char tempToken[ PCD_RULEID_MAX_GROUP_NAME_SIZE+PCD_RULEID_MAX_RULE_NAME_SIZE+2 ];
 
         /* Clear the structure */
         memset( rule.startCondition.ruleCompleted, 0, sizeof( ruleCache_t ) * PCD_START_COND_MAX_IDS );
@@ -633,7 +643,7 @@ static Int32 PCD_parser_handle_START_COND( Char *line )
             memset( tempToken, 0, sizeof( tempToken ) );
             strncpy( tempToken, token, sizeof( tempToken ) - 1 );
 
-            if ( PCD_parser_parse_rule_id( &rule.startCondition.ruleCompleted[ j ].ruleId, tempToken ) != STATUS_OK )
+            if ( PCD_parser_parse_rule_id( &rule.startCondition.ruleCompleted[ j ].ruleId, tempToken ) != PCD_STATUS_OK )
             {
                 return -1;
             }
@@ -664,17 +674,19 @@ static Int32 PCD_parser_handle_START_COND( Char *line )
     switch ( i )
     {
         case PCD_START_COND_KEYWORD_FILE:
-            strncpy( rule.startCondition.filename, token2, PCD_COND_MAX_SIZE );
+			memset( rule.startCondition.filename, 0, sizeof( rule.startCondition.filename ) );
+            strncpy( rule.startCondition.filename, token2, PCD_COND_MAX_SIZE - 1 );
             break;
         case PCD_START_COND_KEYWORD_NETDEVICE:
-            strncpy( rule.startCondition.netDevice, token2, PCD_COND_MAX_SIZE );
+		    memset( rule.startCondition.netDevice, 0, sizeof( rule.startCondition.netDevice ) );
+            strncpy( rule.startCondition.netDevice, token2, IF_NAMESIZE - 1 );
             break;
         case PCD_START_COND_KEYWORD_IPC_OWNER:
             rule.startCondition.ipcOwner = atoi( token2 );
             break;
         case PCD_START_COND_KEYWORD_ENV_VAR:
             {
-                Char *token3;
+                char *token3;
 
                 token3 = strtok(NULL, PCD_PARSER_DELIMITERS);
                 if ( !token3 )
@@ -694,9 +706,9 @@ static Int32 PCD_parser_handle_START_COND( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_COMMAND( Char *line )
+static int32_t PCD_parser_handle_COMMAND( char *line )
 {
-    Char *params;
+    char *params;
 
     PCD_FUNC_ENTER_PRINT
 
@@ -732,10 +744,10 @@ static Int32 PCD_parser_handle_COMMAND( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_SCHED( Char *line )
+static int32_t PCD_parser_handle_SCHED( char *line )
 {
-    Char *token1, *token2;
-    Int32 value;
+    char *token1, *token2;
+    int32_t value;
 
     PCD_FUNC_ENTER_PRINT
 
@@ -780,7 +792,7 @@ static Int32 PCD_parser_handle_SCHED( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_DAEMON( Char *line )
+static int32_t PCD_parser_handle_DAEMON( char *line )
 {
     PCD_FUNC_ENTER_PRINT
 
@@ -792,10 +804,64 @@ static Int32 PCD_parser_handle_DAEMON( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_END_COND( Char *line )
+static int32_t PCD_parser_handle_USER( char *line )
 {
-    Char *token1, *token2;
-    Uint32 i = 0;
+    PCD_FUNC_ENTER_PRINT
+
+    /* Check if the value is a string or number. If it is a string, then 
+     * we'll attempt to convert it to the correct UID */
+    char *linecopy = line;
+    int isnum = 1;
+    for( ; *linecopy != '\0'; ++linecopy )
+    {
+        if( isalpha( *linecopy ) )
+        {
+            isnum = 0;
+            break;
+        }
+    }
+    if ( isnum )
+    {
+        /* USER is a number, assume it is a direct UID */
+        errno = 0;
+        rule.uid = strtoul( line, (char**)NULL, 0 );
+        if ( errno != 0 )
+        {
+             PCD_PRINTF_STDERR( "USER numeric value is invalid for rule = %s",
+                               rule.ruleId.ruleName );
+        }
+    }
+    else
+    {
+        /* USER is a login name, attempt to convert it to the UID */
+        struct passwd* pw = getpwnam( line );
+        if( pw )
+        {
+            rule.uid = pw->pw_uid;
+        }
+        else
+        {
+#ifdef PCD_HOST_BUILD
+            /* On host, warn user that UID cannot be determined, but allow 
+             * parser to continue (since this user should exist on target) */
+            PCD_PRINTF_WARNING_STDOUT( "Cannot determine UID from USER field for rule = %s",
+                                       rule.ruleId.ruleName );
+#else
+            /* On target, this user must exist or it is an error */
+            PCD_PRINTF_STDERR( "Cannot determine UID from USER field for rule = %s",
+                               rule.ruleId.ruleName );
+            return -1;
+#endif
+        }
+    }
+    
+    return 0;
+}
+
+static int32_t PCD_parser_handle_END_COND( char *line )
+{
+    char *token1, *token2;
+    u_int32_t i = 0;
 
     PCD_FUNC_ENTER_PRINT
 
@@ -841,10 +907,12 @@ static Int32 PCD_parser_handle_END_COND( Char *line )
     switch ( i )
     {
         case PCD_END_COND_KEYWORD_FILE:
-            strncpy( rule.endCondition.filename, token2, PCD_COND_MAX_SIZE );
+            memset( rule.endCondition.filename, 0, sizeof( rule.endCondition.filename ) );
+			strncpy( rule.endCondition.filename, token2, PCD_COND_MAX_SIZE - 1 );
             break;
         case PCD_END_COND_KEYWORD_NETDEVICE:
-            strncpy( rule.endCondition.netDevice, token2, PCD_COND_MAX_SIZE );
+		    memset( rule.endCondition.netDevice, 0, sizeof( rule.endCondition.netDevice ) );
+            strncpy( rule.endCondition.netDevice, token2, IF_NAMESIZE - 1 );
             break;
         case PCD_END_COND_KEYWORD_IPC_OWNER:
             rule.endCondition.ipcOwner = atoi( token2 );
@@ -862,9 +930,9 @@ static Int32 PCD_parser_handle_END_COND( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_END_COND_TIMEOUT( Char *line )
+static int32_t PCD_parser_handle_END_COND_TIMEOUT( char *line )
 {
-    Int32 i = atoi( line );
+    int32_t i = atoi( line );
 
     PCD_FUNC_ENTER_PRINT
 
@@ -883,10 +951,10 @@ static Int32 PCD_parser_handle_END_COND_TIMEOUT( Char *line )
     return 0;
 }
 
-static Int32 PCD_parser_handle_FAILURE_ACTION( Char *line )
+static int32_t PCD_parser_handle_FAILURE_ACTION( char *line )
 {
-    Char *token1, *token2;
-    Uint32 i = 0;
+    char *token1, *token2;
+    u_int32_t i = 0;
 
     PCD_FUNC_ENTER_PRINT
 
@@ -932,7 +1000,7 @@ static Int32 PCD_parser_handle_FAILURE_ACTION( Char *line )
     return 0;
 }
 
-STATUS PCD_parser_parse( const Char *filename )
+PCD_status_e PCD_parser_parse( const char *filename )
 {
     PCD_FUNC_ENTER_PRINT
 
@@ -942,13 +1010,13 @@ STATUS PCD_parser_parse( const Char *filename )
     if ( PCD_parser_generate_config( filename ) )
     {
         PCD_PRINTF_STDERR( "Error in generating configuration" );
-        return STATUS_NOK;
+        return PCD_STATUS_NOK;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
 
-STATUS PCD_parser_enable_verbose( Bool enable )
+PCD_status_e PCD_parser_enable_verbose( bool_t enable )
 {
     if ( enable == True )
     {
@@ -959,5 +1027,5 @@ STATUS PCD_parser_enable_verbose( Bool enable )
         verbose = 0;
     }
 
-    return STATUS_OK;
+    return PCD_STATUS_OK;
 }
