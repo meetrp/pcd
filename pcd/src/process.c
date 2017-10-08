@@ -62,6 +62,8 @@
 #include "pcd_api.h"
 #include "ipc.h"
 
+#include "sys/resource.h"
+
 /**************************************************************************/
 /*      LOCAL DEFINITIONS AND VARIABLES                                   */
 /**************************************************************************/
@@ -1011,10 +1013,9 @@ void PCD_process_reboot( void )
     else
     {
         const char msg[]= "pcd: Reboot disabled in debug mode, exiting.\n";
-        int32_t i;
 		
         /* Display reboot message */
-        i = write( STDERR_FILENO, msg, sizeof(msg) );
+        write( STDERR_FILENO, msg, sizeof(msg) );
 
         /* Exit abnormally */
         exit( 1 );

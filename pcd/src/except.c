@@ -164,7 +164,6 @@ static void PCD_dump_maps_file( pid_t pid )
     struct stat fbuf;
     char mapsFile[ 22 ];
     int32_t fd;
-	int32_t i;
 
     sprintf( mapsFile, "%s/%d.maps", CONFIG_PCD_TEMP_PATH, pid );
 
@@ -179,12 +178,12 @@ static void PCD_dump_maps_file( pid_t pid )
         char buffer[ 512 ];
         int32_t readBytes = 0;
 
-        i = write( STDERR_FILENO, "\nMaps file:\n\n", 13 );
+        write( STDERR_FILENO, "\nMaps file:\n\n", 13 );
 
         /* Read the maps file and display it on the console */
         while ( ( readBytes = read( fd, buffer, sizeof( buffer ) ) ) > 0 )
         {
-            i = write( STDERR_FILENO, buffer, readBytes );
+            write( STDERR_FILENO, buffer, readBytes );
         }
 
         close( fd );

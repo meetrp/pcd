@@ -110,7 +110,7 @@ static PCD_status_e PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdA
         pcdApiInitDone = True;
     }
 
-    if ( IPC_get_context_by_owner( &pcdCtx, CONFIG_PCD_OWNER_ID ) != PCD_STATUS_OK )
+    if ( IPC_get_context_by_owner( &pcdCtx, CONFIG_PCD_OWNER_ID ) != IPC_STATUS_OK )
     {
         printf( "pcd: Error: Failed to find PCD context\n");       
         return PCD_STATUS_INVALID_RULE;
@@ -119,7 +119,7 @@ static PCD_status_e PCD_api_malloc_and_send( const struct ruleId_t *ruleId, pcdA
     sprintf( pcdClient, CONFIG_PCD_CLIENTS_NAME_PREFIX "%d", getpid() );
 
     /* Create temporary destination point */
-    if ( IPC_start( pcdClient, &pcdTmpCtx, 0) != PCD_STATUS_OK )
+    if ( IPC_start( pcdClient, &pcdTmpCtx, 0) != IPC_STATUS_OK )
     {
         printf( "pcd: Error: Failed to start IPC\n");
         return PCD_STATUS_NOK;
