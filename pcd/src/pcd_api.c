@@ -110,7 +110,7 @@ static PCD_status_e PCD_api_signal( rule_t *rule, int32_t sig )
 PCD_status_e PCD_api_init( void )
 {
     /* Init IPC */
-    if ( IPC_init( 0 ) != PCD_STATUS_OK )
+    if ( IPC_init( 0 ) != IPC_STATUS_OK )
     {
         PCD_PRINTF_STDERR( "Failed to init PCD API");
 
@@ -118,7 +118,7 @@ PCD_status_e PCD_api_init( void )
     }
 
     /* Start IPC */
-    if ( IPC_start( CONFIG_PCD_SERVER_NAME, &pcdContext, 0 ) != PCD_STATUS_OK )
+    if ( IPC_start( CONFIG_PCD_SERVER_NAME, &pcdContext, 0 ) != IPC_STATUS_OK )
     {
         PCD_PRINTF_STDERR( "Failed to start IPC" );
 
@@ -126,7 +126,7 @@ PCD_status_e PCD_api_init( void )
     }
 
     /* Set owner */
-    if ( IPC_set_owner( pcdContext, CONFIG_PCD_OWNER_ID ) != PCD_STATUS_OK )
+    if ( IPC_set_owner( pcdContext, CONFIG_PCD_OWNER_ID ) != IPC_STATUS_OK )
     {
         IPC_stop( pcdContext );
 
@@ -162,7 +162,7 @@ PCD_status_e PCD_api_check_messages( void )
         IPC_context_t msgContext;
 
         /* Check if we need to reply */
-        if ( IPC_get_msg_context( msg, &msgContext ) == PCD_STATUS_OK )
+        if ( IPC_get_msg_context( msg, &msgContext ) == IPC_STATUS_OK )
         {
             /* Allocate memory for reply message */
             replyMsg = IPC_alloc_msg( pcdContext, sizeof( pcdApiReplyMessage_t ) );
@@ -324,7 +324,7 @@ PCD_status_e PCD_api_check_messages( void )
             replyData->retval = retval;
 
             /* Send response */
-            if ( IPC_reply_msg( msg, replyMsg ) != PCD_STATUS_OK )
+            if ( IPC_reply_msg( msg, replyMsg ) != IPC_STATUS_OK )
             {
                 IPC_free_msg( replyMsg );
             }
@@ -358,7 +358,7 @@ void PCD_api_reply_message( void *cookie, PCD_status_e retval )
     data = IPC_get_msg( msg );
 
     /* Check if we need to reply */
-    if ( IPC_get_msg_context( msg, &msgContext ) == PCD_STATUS_OK )
+    if ( IPC_get_msg_context( msg, &msgContext ) == IPC_STATUS_OK )
     {
         /* Allocate memory for reply message */
         replyMsg = IPC_alloc_msg( pcdContext, sizeof( pcdApiReplyMessage_t ) );
@@ -382,7 +382,7 @@ void PCD_api_reply_message( void *cookie, PCD_status_e retval )
         replyData->retval = retval;
 
         /* Send response */
-        if ( IPC_reply_msg( msg, replyMsg ) != PCD_STATUS_OK )
+        if ( IPC_reply_msg( msg, replyMsg ) != IPC_STATUS_OK )
         {
             PCD_PRINTF_STDERR( "Failed to send termination reply message" );
             IPC_free_msg( replyMsg );
