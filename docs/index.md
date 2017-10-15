@@ -1,12 +1,12 @@
-PCD - Process Control Daemon
-============================
+**~~introduction~~** | [build pcd](build.md) | [pcd cli](doc_index.md) | [pcd scripts](doc_index.md) | [exception handlers](doc_index.md) | [dependency graph](doc_index.md) | [generate header file](doc_index.md) | [api](doc_index.md)
 
-| Documentation | Examples |
+INTRODUCTION
+=============
 
-# What is PCD?
+## What is PCD?
 PCD (**Process Control Daemon**), is an open source, light-weight, system level process manager for Embedded Linux based products (Consumer electronics, network devices, and more). With PCD in control, it is guaranteed that the system’s boot up time will be reduced, and its reliability, availability and robustness will be enhanced.
 
-# Why do you need PCD in your Embedded Linux based product?
+## Why do you need PCD in your Embedded Linux based product?
 With PCD driving your product, you will gain:
 - Enhanced control and monitoring on all the processes in the system.
 - Simple, yet powerfull means to configure each process and service in the system:
