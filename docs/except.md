@@ -1,4 +1,4 @@
-[introduction](index.md) | [build pcd](build.md) | [pcd cli](cli.md) | [pcd scripts](script.md) | **~~exception handlers~~** | [dependency graph](depend.md) | [generate header file](header.md) | [api](api.md)
+[intro](index.md) | [how to build](build.md) | [usage](cli.md) | [scripts](script.md) | **~~handle exception~~** | [dependency graph](depend.md) | [header file](header.md) | [system startup](startup.md) | [api](api.md)
 
 REGISTERING TO THE PCD EXCEPTION HANDLERS
 =========================================

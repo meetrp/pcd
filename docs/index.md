@@ -1,4 +1,4 @@
-**~~introduction~~** | [build pcd](build.md) | [pcd cli](cli.md) | [pcd scripts](script.md) | [exception handlers](except.md) | [dependency graph](depend.md) | [generate header file](header.md) | [api](api.md)
+**~~intro~~** | [how to build](build.md) | [usage](cli.md) | [scripts](script.md) | [handle exception](except.md) | [dependency graph](depend.md) | [header file](header.md) | [system startup](startup.md) | [api](api.md)
 
 INTRODUCTION
 =============

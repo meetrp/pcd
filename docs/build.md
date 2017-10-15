@@ -1,4 +1,4 @@
-[introduction](index.md) | **~~build pcd~~** | [pcd cli](cli.md) | [pcd scripts](script.md) | [exception handlers](except.md) | [dependency graph](depend.md) | [generate header file](header.md) | [api](api.md)
+[intro](index.md) | **~~how to build~~** | [usage](cli.md) | [scripts](script.md) | [handle exception](except.md) | [dependency graph](depend.md) | [header file](header.md) | [system startup](startup.md) | [api](api.md)
 
 CONFIGURE AND BUILD THE PCD
 ===========================

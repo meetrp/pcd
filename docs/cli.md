@@ -1,4 +1,4 @@
-[introduction](index.md) | [build pcd](build.md) | **~~pcd cli~~** | [pcd scripts](script.md) | [exception handlers](except.md) | [dependency graph](depend.md) | [generate header file](header.md) | [api](api.md)
+[intro](index.md) | [how to build](build.md) | **~~usage~~** | [scripts](script.md) | [handle exception](except.md) | [dependency graph](depend.md) | [header file](header.md) | [system startup](startup.md) | [api](api.md)
 
 PCD COMMAND LINE PARAMETERS
 ===========================

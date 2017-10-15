@@ -1,4 +1,4 @@
-[introduction](index.md) | [build pcd](build.md) | [pcd cli](cli.md) | [pcd scripts](script.md) | [exception handlers](except.md) | [dependency graph](depend.md) | **~~generate header file~~** | [api](api.md)
+[intro](index.md) | [how to build](build.md) | [usage](cli.md) | [scripts](script.md) | [handle exception](except.md) | [dependency graph](depend.md) | **~~header file~~** | [system startup](startup.md) | [api](api.md)
 
 GENERATING HEADER FILES WITH RULE NAMES
 =======================================
