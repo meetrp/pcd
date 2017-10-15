@@ -1,4 +1,4 @@
-**~~introduction~~** | [build pcd](build.md) | [pcd cli](doc_index.md) | [pcd scripts](doc_index.md) | [exception handlers](doc_index.md) | [dependency graph](doc_index.md) | [generate header file](doc_index.md) | [api](doc_index.md)
+**~~introduction~~** | [build pcd](build.md) | [pcd cli](cli.md) | [pcd scripts](script.md) | [exception handlers](except.md) | [dependency graph](depend.md) | [generate header file](header.md) | [api](api.md)
 
 INTRODUCTION
 =============
@@ -93,6 +93,5 @@ Browse the PCD website, join the community, request features, report bugs, discu
 - (**ORIGINAL**) PCD project page at SourceForge: [http://sourceforge.net/projects/pcd/](http://sourceforge.net/projects/pcd/)
 - (**ORIGINAL**) PCD presentations: [http://www.slideshare.net/haish](http://www.slideshare.net/haish)
 - [PCD Design document](trainings/pcd_hld.pdf)
-- PCD Documentation
 - Examples for PCD debug capabilities: Resolving segmentation faults with PCD, Resolving alignment traps with PCD.
 
