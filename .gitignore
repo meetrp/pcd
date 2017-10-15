@@ -24,7 +24,6 @@ coverage
 # compile/build directories #
 #############################
 build/
-docs/
 .settings
 
 
