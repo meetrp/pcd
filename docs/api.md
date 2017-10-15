@@ -1,6 +1,6 @@
 [intro](index.md) | [how to build](build.md) | [usage](cli.md) | [scripts](script.md) | [handle exception](except.md) | [dependency graph](depend.md) | [header file](header.md) | [system startup](startup.md) | **~~api~~**
 
-Using the PCD API
+USING THE PCD API
 =================
 The PCD provides additional API for every application in order to request services from the PCD, or retrieve information. The services that the PCD provides encapsulate the actual process name and id (pid might vary). The controlling application only needs to know the rule name in order to request a service.
 
