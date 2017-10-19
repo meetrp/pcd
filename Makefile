@@ -47,6 +47,10 @@ export PCD_ROOT PCD_BIN
 
 all: pcd
 
+# Include Versioning data
+include $(PCD_ROOT)/version.mk
+
+
 help:
 	  @echo "Configuration commands:"
 	  @echo "- make defconfig - Configure default PCD settings."
@@ -139,7 +143,8 @@ check_config:
 	  exit 1;\
 	fi
 
-pcd: pcd_title check_config check_permissions
+
+pcd: pcd_title check_config check_permissions generate_version
 	@echo "Building PCD..."
 	@$(MAKE) -C ./ipc/src
 	@$(MAKE) -C ./pcd/src/pcdapi/src
@@ -165,6 +170,7 @@ clean:
 	@$(MAKE) -C ./ipc/src clean -s
 	@$(MAKE) -C $(PCD_KCFG_DIR) clean -s
 	@rm -f $(PCD_ROOT)/include/*
+	@rm -f $(PCD_VERSION_H)
 
 distclean: clean
 	@rm -f .config .config.old $(PCD_CFG_DIR)/pcd_autoconf.h $(PCD_CFG_DIR)/auto.conf

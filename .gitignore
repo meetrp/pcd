@@ -42,7 +42,6 @@ cscope.*
 .config
 .config.old
 bin/
-include/
 ipc/src/ipc.d
 ipc/src/libipc.map
 pcd/src/condchk.d
