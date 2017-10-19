@@ -52,6 +52,8 @@
 #include "pcdapi.h"
 #include "errlog.h"
 
+#include "pcd_version.h"
+
 /**************************************************************************/
 /*      LOCAL DEFINITIONS AND VARIABLES                                   */
 /**************************************************************************/
@@ -83,6 +85,7 @@ static void PCD_main_usage( char *execname )
     printf( "-e FILE, --errlog=FILE\t\tSpecify error log file (in nvram).\n" );
     printf( "-c, --crashd\t\t\tEnable crash-daemon only mode (no rules file).\n" );
     printf( "-h, --help\t\t\tPrint this message and exit.\n" );
+    printf( "-v, --version\t\t\tPrint PCD version information.\n" );
     exit(0);
 }
 
@@ -177,7 +180,27 @@ void PCD_main_parse_params( int32_t argc, char *argv[] )
                 break;
 
             case 'V':
-				printf( "Process Control Daemon v%s\nCopyright (C) 2010 Texas Instruments Incorporated\nCopyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd", PCD_VERSION );
+				if (strlen(PCD_VERSION_DATE)) {
+					printf("PCD %s (%s) [%s]\n", PCD_VERSION, PCD_VERSION_DATE, PCD_BRANCH);
+				} else {
+					printf("PCD %s\n", PCD_VERSION);
+				}
+#if defined(CONFIG_PCD_PLATFORM_ARM) 
+				printf("Built for ARM (%s)\n", PCD_BUILD_DATE);
+#elif defined(CONFIG_PCD_PLATFORM_MIPS)
+				printf("Built for MIPS (%s)\n", PCD_BUILD_DATE);
+#elif defined(CONFIG_PCD_PLATFORM_X86)
+				printf("Built for X86 (%s)\n", PCD_BUILD_DATE);
+#elif defined(CONFIG_PCD_PLATFORM_X64)
+				printf("Built for X64 (%s)\n", PCD_BUILD_DATE);
+#elif defined(CONFIG_PCD_PLATFORM_OTHER)
+				printf("Built for OTHER (%s)\n", PCD_BUILD_DATE);
+#endif
+				printf("Copyright (C) 2010 Texas Instruments Incorporated\n");
+				printf("Copyright (C) 2011 PCD Project - http://www.rt-embedded.com/pcd\n");
+				printf("Copyright (C) 2017 PCD - https://meetrp.github.io/pcd/\n");
+				printf("License LGPL-2.1: GNU Lesser General Public License v2.1 <http://www.gnu.org/licenses/lgpl-2.1.html#SEC1>\n");
+				printf("\n");
 				exit(0);
 				break;
 			
