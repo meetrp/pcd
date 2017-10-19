@@ -7,7 +7,7 @@ PCD_BRANCH := $(shell git symbolic-ref HEAD 2> /dev/null | cut -d'/' -f3-)
 PCD_BUILD_DATE := $(shell date -R)
 PCD_VERSION_H := $(CURDIR)/pcd/include/pcd_version.h
 
-PCD_TAG_VERSION := "v1.1.6"
+PCD_TAG_VERSION := "v1.2.0"
 
 generate_version:
 	@echo "/*******************************************************************" > $(PCD_VERSION_H);
