@@ -85,7 +85,7 @@ static void PCD_main_usage( char *execname )
     printf( "-e FILE, --errlog=FILE\t\tSpecify error log file (in nvram).\n" );
     printf( "-c, --crashd\t\t\tEnable crash-daemon only mode (no rules file).\n" );
     printf( "-h, --help\t\t\tPrint this message and exit.\n" );
-    printf( "-v, --version\t\t\tPrint PCD version information.\n" );
+    printf( "-V, --version\t\t\tPrint PCD version information.\n" );
     exit(0);
 }
 
