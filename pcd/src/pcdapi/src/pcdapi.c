@@ -60,6 +60,8 @@
 #include "pcdapi.h"
 #include "except.h"
 
+#include <signal.h>
+
 
 /*! \def PCD_API_REPLY_TIMEOUT
  *  \brief Timeout for PCD response
